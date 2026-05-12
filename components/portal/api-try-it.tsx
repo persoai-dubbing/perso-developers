@@ -90,7 +90,6 @@ export function ApiTryIt({
     if (
       bodyValue &&
       method !== "GET" &&
-      method !== "HEAD" &&
       method !== "DELETE"
     ) {
       lines.push(`     -H "Content-Type: application/json"`);
@@ -112,7 +111,6 @@ export function ApiTryIt({
       if (
         bodyValue &&
         method !== "GET" &&
-        method !== "HEAD" &&
         method !== "DELETE"
       ) {
         fetchOptions.body = bodyValue;
