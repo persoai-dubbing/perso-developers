@@ -927,7 +927,6 @@ export const dubbingCategory: ApiCategory = {
             name: "numberOfSpeakers",
             type: "integer",
             required: true,
-            default: "1",
             description:
               "Number of speakers in the video for multi-speaker detection.",
           },
@@ -959,7 +958,7 @@ export const dubbingCategory: ApiCategory = {
           {
             name: "ttsModel",
             type: "string",
-            required: false,
+            required: true,
             description:
               "TTS model selection. ELEVEN_V2 (natural) or ELEVEN_V3 (emotional).",
             enum: ["ELEVEN_V2", "ELEVEN_V3"],
@@ -980,6 +979,7 @@ export const dubbingCategory: ApiCategory = {
   "numberOfSpeakers": 2,
   "withLipSync": false,
   "preferredSpeedType": "GREEN",
+  "ttsModel": "ELEVEN_V2",
   "title": "My Translation Project"
 }`,
       },
