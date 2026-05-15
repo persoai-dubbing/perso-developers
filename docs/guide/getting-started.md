@@ -97,12 +97,12 @@ Try it에서 검증한 호출을 그대로 서버 코드에 옮기는 단계입�
 ### 3.1 cURL
 
 ```bash
-curl -X GET "https://api.perso.ai/v1/spaces" \
+curl -X GET "https://api.perso.ai/portal/api/v1/spaces" \
      -H "XP-API-KEY: $PERSO_API_KEY"
 ```
 
 ```bash
-curl -X POST "https://api.perso.ai/v1/dubbing" \
+curl -X POST "https://api.perso.ai/video-translator/api/v1/" \
      -H "XP-API-KEY: $PERSO_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{"spaceSeq": 123, "sourceLanguage": "en", "targetLanguage": "ko"}'
@@ -135,7 +135,7 @@ async function persoFetch<T>(
 }
 
 // 사용 예
-const spaces = await persoFetch<{ result: unknown[] }>("/v1/spaces");
+const spaces = await persoFetch<{ result: unknown[] }>("/portal/api/v1/spaces");
 ```
 
 ### 3.3 Python (requests)
@@ -159,7 +159,7 @@ def perso_get(path: str, **kwargs):
     return r.json()
 
 # 사용 예
-spaces = perso_get("/v1/spaces")
+spaces = perso_get("/portal/api/v1/spaces")
 ```
 
 ### 3.4 멀티 테넌시 (`spaceSeq`)
@@ -300,7 +300,7 @@ Perso 플랫폼의 도메인 데이터는 대부분 **Space 단위**로 스코�
   ```
 
   **전형적 실패 사례**
-  - `POST /dubbing`에 파일을 직접 붙이거나, Step 3을 건너뛴 채 블랍 URL만 전달 → `400 / 404`.
+  - `POST /video-translator`에 파일을 직접 붙이거나, Step 3을 건너뛴 채 블랍 URL만 전달 → `400 / 404`.
   - Step 2에 `XP-API-KEY`를 넣음 → Azure가 요청 거부.
   - Step 2 이후 30분 지연 → SAS 만료 → Step 3에서 업로드된 파일을 찾지 못함.
   - Step 3의 `fileUrl`에 `?sig=…` 쿼리스트링까지 포함 → 등록 실패.

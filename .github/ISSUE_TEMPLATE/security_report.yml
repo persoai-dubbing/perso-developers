@@ -1,0 +1,71 @@
+name: Security Report
+description: Report a security concern (use only for non-sensitive reports)
+title: "[Security]: "
+labels: ["security"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ⚠️ Stop — read this first
+
+        **Do not file a public issue for sensitive vulnerabilities** (auth bypass, data exposure, RCE, account takeover, etc.).
+
+        Public issues are visible to everyone and can be exploited before we have time to patch.
+
+        **For sensitive reports, contact us privately instead:**
+        - Email: **security@perso.ai**
+        - Or use GitHub's [private vulnerability reporting](https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/privately-reporting-a-security-vulnerability).
+
+        Use this template **only** for low-impact, already-public, or general security questions (e.g. "should this header be set?", "is this CORS config intentional?").
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      description: Please confirm before continuing.
+      options:
+        - label: This is **not** a sensitive vulnerability. I understand sensitive reports must go to security@perso.ai or via private vulnerability reporting.
+          required: true
+        - label: This report does **not** include exploit details, working PoCs, or unredacted secrets.
+          required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the security concern at a high level.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Estimated severity
+      options:
+        - Informational
+        - Low
+        - Medium
+        - High (please report privately instead)
+        - Critical (please report privately instead)
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Affected component
+      description: Which endpoint, page, or area of the portal/API is affected?
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: What's the worst-case effect? Who is affected?
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested mitigation (optional)
+      description: If you have ideas for how to fix or mitigate this, share them here.
