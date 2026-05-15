@@ -1,0 +1,29 @@
+name: DEVELOP build
+
+on:
+  push:
+    branches:
+      - develop
+    tags:
+      - '*'
+
+env:
+  DOCKER_REPOSITORY: ${{ github.event.repository.name }}
+
+jobs:
+  imagebuild:
+    runs-on: [self-hosted, Linux, X64, node08]
+    steps:
+      # checkout the repo
+      - name: 1️⃣ 'Checkout GitHub Action'
+        uses: actions/checkout@main
+
+      - name: 3️⃣ 'Build and push image'
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.PERSO_REGISTRY_USERNAME }}
+          password: ${{ secrets.PERSO_REGISTRY_PASSWORD }}
+      - run: |
+          docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.DOCKER_REPOSITORY }}:$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.DOCKER_REPOSITORY }}:$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
