@@ -920,7 +920,7 @@ export const dubbingCategory: ApiCategory = {
             type: "string[]",
             required: false,
             description:
-              "(Deprecated since 2026-05-22) Array of target language codes to translate into. " +
+              "(Deprecated since 2026-05-14) Array of target language codes to translate into. " +
               "New integrations should use `targetLanguages` instead. " +
               "If both fields are provided, `targetLanguages` takes precedence. " +
               "Either `targetLanguageCodes` or `targetLanguages` must be provided.",
