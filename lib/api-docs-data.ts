@@ -386,8 +386,7 @@ export const fileCategory: ApiCategory = {
             name: "url",
             type: "string",
             required: true,
-            description:
-              "External video URL (YouTube, TikTok, Google Drive).",
+            description: "External video URL (YouTube, TikTok, Google Drive).",
           },
           {
             name: "lang",
@@ -645,8 +644,7 @@ export const fileCategory: ApiCategory = {
             name: "url",
             type: "string",
             required: true,
-            description:
-              "External video URL (YouTube, TikTok, Google Drive).",
+            description: "External video URL (YouTube, TikTok, Google Drive).",
           },
           {
             name: "lang",
@@ -884,7 +882,8 @@ export const dubbingCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/spaces/{spaceSeq}/translate",
       title: "Request Translation",
       description:
-        "Submit a video or audio translation request based on uploaded media files. The mediaSeq is the seq value returned from the Upload Video or Upload Audio endpoint in the File API. If you receive a 'space queue not found' error, you must first call the PUT /api/v1/projects/spaces/{spaceSeq}/queue endpoint (Usage API) to initialize the queue before retrying.",
+        "Submit a video or audio translation request based on uploaded media files. The mediaSeq is the seq value returned from the Upload Video or Upload Audio endpoint in the File API. New integrations should use `targetLanguages` (per-language TTS model selection). The legacy `targetLanguageCodes` + `ttsModel` pair is still accepted for backward compatibility, but is deprecated. " +
+        "If you receive a 'space queue not found' error, you must first call the PUT /api/v1/projects/spaces/{spaceSeq}/queue endpoint (Usage API) to initialize the queue before retrying.",
       pathParams: [
         {
           name: "spaceSeq",
@@ -919,14 +918,44 @@ export const dubbingCategory: ApiCategory = {
           {
             name: "targetLanguageCodes",
             type: "string[]",
-            required: true,
+            required: false,
             description:
-              "Array of target language codes to translate into.",
+              "(Deprecated since 2026-05-22) Array of target language codes to translate into. " +
+              "New integrations should use `targetLanguages` instead. " +
+              "If both fields are provided, `targetLanguages` takes precedence. " +
+              "Either `targetLanguageCodes` or `targetLanguages` must be provided.",
+          },
+          {
+            name: "targetLanguages",
+            type: "object[]",
+            required: false,
+            description:
+              "Recommended. List of target language and TTS model pairs. " +
+              "When provided, this field takes precedence over `targetLanguageCodes` and the top-level `ttsModel`. " +
+              "Either `targetLanguageCodes` or `targetLanguages` must be provided.",
+            fields: [
+              {
+                name: "languageCode",
+                type: "string",
+                required: true,
+                description:
+                  "Target language code (e.g. 'en', 'ko'). Must be a valid code returned by the Language API.",
+              },
+              {
+                name: "ttsModel",
+                type: "string",
+                required: false,
+                enum: ["ELEVEN_V2", "ELEVEN_V3"],
+                description:
+                  "TTS model to apply to this language. Required for DUBBING / LIPSYNC requests. " +
+                  "Ignored for STT / AudioSeparation requests (may be omitted).",
+              },
+            ],
           },
           {
             name: "numberOfSpeakers",
             type: "integer",
-            required: true,
+            required: false,
             default: "1",
             description:
               "Number of speakers in the video for multi-speaker detection.",
@@ -960,6 +989,7 @@ export const dubbingCategory: ApiCategory = {
             name: "ttsModel",
             type: "string",
             required: false,
+            deprecated: true,
             description:
               "TTS model selection. ELEVEN_V2 (natural) or ELEVEN_V3 (emotional).",
             enum: ["ELEVEN_V2", "ELEVEN_V3"],
@@ -976,7 +1006,10 @@ export const dubbingCategory: ApiCategory = {
   "mediaSeq": 12345,
   "isVideoProject": true,
   "sourceLanguageCode": "en",
-  "targetLanguageCodes": ["ko", "ja"],
+  "targetLanguages": [
+      { "languageCode": "ko", "ttsModel": "ELEVEN_V3" },
+      { "languageCode": "ja", "ttsModel": "ELEVEN_V2" }
+  ],
   "numberOfSpeakers": 2,
   "withLipSync": false,
   "preferredSpeedType": "GREEN",
@@ -1008,6 +1041,11 @@ export const dubbingCategory: ApiCategory = {
           code: "VT4021",
           status: 402,
           description: "Insufficient credits",
+        },
+        {
+          code: "VT4009",
+          status: 400,
+          description: "Target language and TTS model pair is not supported",
         },
       ],
     },
@@ -1360,8 +1398,7 @@ export const dubbingCategory: ApiCategory = {
           name: "sharedStatus",
           type: "boolean",
           required: true,
-          description:
-            "Whether to enable (true) or disable (false) sharing.",
+          description: "Whether to enable (true) or disable (false) sharing.",
         },
       ],
       response: {
@@ -1488,8 +1525,7 @@ export const dubbingCategory: ApiCategory = {
       method: "GET",
       path: "/video-translator/api/v1/projects/{projectSeq}/spaces/{spaceSeq}/retranslation/status",
       title: "Check Retranslation Status",
-      description:
-        "Check whether retranslation is available for a project.",
+      description: "Check whether retranslation is available for a project.",
       pathParams: [
         {
           name: "projectSeq",
@@ -1583,8 +1619,7 @@ export const editingCategory: ApiCategory = {
             name: "targetText",
             type: "string",
             required: true,
-            description:
-              "The text to translate or the updated translation.",
+            description: "The text to translate or the updated translation.",
           },
         ],
         example: `{
@@ -1618,8 +1653,7 @@ export const editingCategory: ApiCategory = {
       method: "PATCH",
       path: "/video-translator/api/v1/project/{projectSeq}/audio-sentence/{audioSentenceSeq}/generate-audio",
       title: "Generate Audio",
-      description:
-        "Generate a translated audio file for a specific sentence.",
+      description: "Generate a translated audio file for a specific sentence.",
       pathParams: [
         {
           name: "projectSeq",
@@ -1675,8 +1709,7 @@ export const editingCategory: ApiCategory = {
       method: "PUT",
       path: "/video-translator/api/v1/project/{projectSeq}/audio-sentence/{audioSentenceSeq}/reset",
       title: "Reset Translation",
-      description:
-        "Reset a translation back to its original proofread state.",
+      description: "Reset a translation back to its original proofread state.",
       pathParams: [
         {
           name: "projectSeq",
@@ -1707,8 +1740,7 @@ export const editingCategory: ApiCategory = {
       method: "PUT",
       path: "/video-translator/api/v1/project/{projectSeq}/audio-sentence/{audioSentenceSeq}/cancel",
       title: "Cancel Translation",
-      description:
-        "Cancel an in-progress translation for a specific sentence.",
+      description: "Cancel an in-progress translation for a specific sentence.",
       pathParams: [
         {
           name: "projectSeq",
@@ -1859,15 +1891,13 @@ export const editingCategory: ApiCategory = {
             name: "isLipSync",
             type: "boolean",
             required: false,
-            description:
-              "Whether to enable lip sync for the proofread output.",
+            description: "Whether to enable lip sync for the proofread output.",
           },
           {
             name: "experimentKey",
             type: "string",
             required: false,
-            description:
-              "Experiment key for A/B testing configurations.",
+            description: "Experiment key for A/B testing configurations.",
           },
           {
             name: "preferredSpeedType",
@@ -2325,8 +2355,7 @@ export const languageCategory: ApiCategory = {
 export const feedbackCategory: ApiCategory = {
   slug: "feedback",
   title: "Feedback API",
-  description:
-    "Submit and retrieve feedback ratings for translated projects.",
+  description: "Submit and retrieve feedback ratings for translated projects.",
   endpoints: [
     {
       id: "submit-feedback",
@@ -2414,8 +2443,7 @@ export const feedbackCategory: ApiCategory = {
 export const communitySpotlightCategory: ApiCategory = {
   slug: "community-spotlight",
   title: "Community Spotlight API",
-  description:
-    "Browse featured public projects and shared translations.",
+  description: "Browse featured public projects and shared translations.",
   endpoints: [
     {
       id: "list-recommended",
@@ -2442,8 +2470,7 @@ export const communitySpotlightCategory: ApiCategory = {
           name: "languageCode",
           type: "string",
           required: false,
-          description:
-            "Filter by target language code (e.g. ko, en, ja).",
+          description: "Filter by target language code (e.g. ko, en, ja).",
         },
       ],
       response: {
