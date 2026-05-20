@@ -883,7 +883,7 @@ export const dubbingCategory: ApiCategory = {
       title: "Request Translation",
       description:
         "Submit a video or audio translation request based on uploaded media files. The mediaSeq is the seq value returned from the Upload Video or Upload Audio endpoint in the File API. New integrations should use `targetLanguages` (per-language TTS model selection). The legacy `targetLanguageCodes` + `ttsModel` pair is still accepted for backward compatibility, but is deprecated. " +
-        "If you receive a 'space queue not found' error, you must first call the PUT /api/v1/projects/spaces/{spaceSeq}/queue endpoint (Usage API) to initialize the queue before retrying.",
+        "If you receive a 'space queue not found' error, you must first call the PUT /video-translator/api/v1/projects/spaces/{spaceSeq}/queue endpoint (Usage API) to initialize the queue before retrying.",
       pathParams: [
         {
           name: "spaceSeq",
@@ -991,7 +991,9 @@ export const dubbingCategory: ApiCategory = {
             required: false,
             deprecated: true,
             description:
-              "TTS model selection. ELEVEN_V2 (natural) or ELEVEN_V3 (emotional).",
+              "(Deprecated since 2026-05-22) Single TTS model applied to all target languages. " +
+              "New integrations should specify `ttsModel` per language inside `targetLanguages`. " +
+              "ELEVEN_V2 (natural) or ELEVEN_V3 (emotional).",
             enum: ["ELEVEN_V2", "ELEVEN_V3"],
           },
           {
