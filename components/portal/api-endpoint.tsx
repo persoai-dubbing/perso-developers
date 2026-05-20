@@ -38,7 +38,7 @@ export function ApiToc({ items }: { items: TocItem[] }) {
           setActiveId(visible[0].target.id);
         }
       },
-      { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
+      { rootMargin: "-20% 0px -60% 0px", threshold: 0 },
     );
 
     elements.forEach((el) => observer.observe(el));
@@ -58,7 +58,7 @@ export function ApiToc({ items }: { items: TocItem[] }) {
               "h-1 rounded-full transition-all duration-200",
               activeId === item.id
                 ? cn("w-7 opacity-100", tocBarColors[item.method])
-                : cn("w-5 opacity-40", tocBarColors[item.method])
+                : cn("w-5 opacity-40", tocBarColors[item.method]),
             )}
           />
         ))}
@@ -77,13 +77,13 @@ export function ApiToc({ items }: { items: TocItem[] }) {
                 href={`#${item.id}`}
                 className={cn(
                   "flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-secondary/60 group",
-                  activeId === item.id && "bg-secondary/80"
+                  activeId === item.id && "bg-secondary/80",
                 )}
               >
                 <Badge
                   className={cn(
                     "font-mono text-[10px] px-1 w-12 justify-center shrink-0",
-                    methodColors[item.method]
+                    methodColors[item.method],
                   )}
                 >
                   {item.method}
@@ -93,7 +93,7 @@ export function ApiToc({ items }: { items: TocItem[] }) {
                     "font-medium text-xs group-hover:text-primary whitespace-nowrap",
                     activeId === item.id
                       ? "text-primary font-semibold"
-                      : "text-foreground"
+                      : "text-foreground",
                   )}
                 >
                   {item.title}
@@ -104,7 +104,7 @@ export function ApiToc({ items }: { items: TocItem[] }) {
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
 
@@ -131,6 +131,8 @@ export interface Parameter {
   description: string;
   default?: string;
   enum?: string[];
+  deprecated?: boolean;
+  fields?: Parameter[];
 }
 
 export interface ErrorResponse {
