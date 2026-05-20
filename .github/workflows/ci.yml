@@ -12,7 +12,7 @@ env:
 
 jobs:
   imagebuild:
-    runs-on: [self-hosted, Linux, X64, node08]
+    runs-on: ubuntu-latest
     steps:
       # checkout the repo
       - name: 1️⃣ 'Checkout GitHub Action'
