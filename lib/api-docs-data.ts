@@ -991,7 +991,7 @@ export const dubbingCategory: ApiCategory = {
             required: false,
             deprecated: true,
             description:
-              "(Deprecated since 2026-05-22) Single TTS model applied to all target languages. " +
+              "(Deprecated since 2026-05-14) Single TTS model applied to all target languages. " +
               "New integrations should specify `ttsModel` per language inside `targetLanguages`. " +
               "ELEVEN_V2 (natural) or ELEVEN_V3 (emotional).",
             enum: ["ELEVEN_V2", "ELEVEN_V3"],
