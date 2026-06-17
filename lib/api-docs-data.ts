@@ -2105,7 +2105,7 @@ export const usageCategory: ApiCategory = {
           type: "string",
           required: true,
           description: "The type of media.",
-          enum: ["VIDEO", "AUDIO"],
+          enum: ["video", "audio"],
         },
         {
           name: "lipSync",
