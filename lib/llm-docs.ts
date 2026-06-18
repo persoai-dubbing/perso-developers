@@ -54,7 +54,7 @@ function renderEndpoint(ep: ApiEndpointProps): string {
     lines.push("Path parameters:");
     for (const p of ep.pathParams) {
       lines.push(
-        `  - ${p.name} (${p.type}, ${p.required ? "required" : "optional"}): ${p.description}`
+        `  - ${p.name} (${p.type}, ${p.required ? "required" : "optional"}): ${p.description}`,
       );
     }
     lines.push("");
@@ -149,7 +149,7 @@ These are the most common failure points. Apply them by default.
                 Body: raw file bytes
                 DO NOT send XP-API-KEY on this request.
                 201 on success. 403 = SAS expired, go back to Step 1.
-   Step 3:  POST /file/api/upload/video   (or /audio)
+   Step 3:  PUT /file/api/upload/video   (or /audio)
                 Body: { "fileUrl": "<blobSasUrl with the '?...' query string stripped>", ... }
                 -> { "seq": <number> }    // use this as mediaSeq in downstream APIs
    \`\`\`
@@ -185,13 +185,15 @@ export function generateLlmDocs(): string {
   lines.push(`API Base URL: ${apiDocsConfig.apiBaseUrl}`);
   lines.push(`Service/File URL: ${apiDocsConfig.storageBaseUrl}`);
   lines.push(
-    `Authentication: Include \`${apiDocsConfig.authHeader}\` header in every request.`
+    `Authentication: Include \`${apiDocsConfig.authHeader}\` header in every request.`,
   );
   lines.push(`API Key format: ${apiDocsConfig.keyFormat}`);
   lines.push("");
   lines.push("Example:");
   lines.push("```");
-  lines.push(`curl -X GET ${apiDocsConfig.apiBaseUrl}/video-translator/api/v1/languages \\`);
+  lines.push(
+    `curl -X GET ${apiDocsConfig.apiBaseUrl}/video-translator/api/v1/languages \\`,
+  );
   lines.push(`  -H "XP-API-KEY: pk_live_xxxxxxxxxxxxxxxxxxxx"`);
   lines.push("```");
   lines.push("");
