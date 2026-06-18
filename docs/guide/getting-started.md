@@ -30,11 +30,11 @@
 
 ### 1.2 키 생명주기
 
-| 상태 | 의미 | 복구 |
-|---|---|---|
-| `Active` | 호출 가능 | — |
+| 상태      | 의미                   | 복구       |
+| --------- | ---------------------- | ---------- |
+| `Active`  | 호출 가능              | —          |
 | `Expired` | 만료일 경과. 자동 무효 | 새 키 발급 |
-| `Revoked` | 수동 무효화 | 새 키 발급 |
+| `Revoked` | 수동 무효화            | 새 키 발급 |
 
 - **Revoke**: 키만 비활성화, 목록·로그 이력은 유지. 유출 의심 시 가장 먼저 수행.
 - **Delete**: 목록에서도 제거. 되돌릴 수 없습니다.
@@ -114,10 +114,7 @@ curl -X POST "https://api.perso.ai/video-translator/api/v1/" \
 const BASE_URL = "https://api.perso.ai";
 const API_KEY = process.env.PERSO_API_KEY!;
 
-async function persoFetch<T>(
-  path: string,
-  init: RequestInit = {},
-): Promise<T> {
+async function persoFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     ...init,
     headers: {
@@ -184,15 +181,15 @@ Perso 플랫폼의 도메인 데이터는 대부분 **Space 단위**로 스코�
 
 ### 3.6 에러 처리 규칙
 
-| 상태 | 의미 | 대응 |
-|---|---|---|
-| `400` | 요청 스펙 오류 | 본문 검증, 필드명·타입 확인 |
-| `401` | 인증 실패 | `XP-API-KEY` 헤더 이름·값·상태 확인 |
-| `403` | 권한 없음 | 해당 Space에 대한 권한, 키 스코프 확인 |
-| `404` | 리소스 없음 | `spaceSeq`, ID 재확인 |
-| `409` | 상태 충돌 | 이미 진행 중인 작업 여부 |
-| `429` | 레이트 리밋 | 백오프 후 재시도, 쿼터 설정 검토 |
-| `5xx` | 서버 오류 | 재시도(지수 백오프), 지속 발생 시 Request ID와 함께 문의 |
+| 상태  | 의미           | 대응                                                     |
+| ----- | -------------- | -------------------------------------------------------- |
+| `400` | 요청 스펙 오류 | 본문 검증, 필드명·타입 확인                              |
+| `401` | 인증 실패      | `XP-API-KEY` 헤더 이름·값·상태 확인                      |
+| `403` | 권한 없음      | 해당 Space에 대한 권한, 키 스코프 확인                   |
+| `404` | 리소스 없음    | `spaceSeq`, ID 재확인                                    |
+| `409` | 상태 충돌      | 이미 진행 중인 작업 여부                                 |
+| `429` | 레이트 리밋    | 백오프 후 재시도, 쿼터 설정 검토                         |
+| `5xx` | 서버 오류      | 재시도(지수 백오프), 지속 발생 시 Request ID와 함께 문의 |
 
 응답 JSON의 `errorCode` / `message`가 1차 디버깅 소스입니다. Usage 로그에서 **Request ID**를 확보해 문의하세요.
 
@@ -220,12 +217,12 @@ Perso 플랫폼의 도메인 데이터는 대부분 **Space 단위**로 스코�
 
 #### Stats Cards
 
-| 카드 | 지표 |
-|---|---|
+| 카드           | 지표                                 |
+| -------------- | ------------------------------------ |
 | Total Requests | 전체 요청 수 + 이전 구간 대비 증감율 |
-| Success Rate | 2XX 비율 |
-| Avg. Latency | 평균 응답 시간 (ms) |
-| Error Rate | 4XX+5XX 비율 |
+| Success Rate   | 2XX 비율                             |
+| Avg. Latency   | 평균 응답 시간 (ms)                  |
+| Error Rate     | 4XX+5XX 비율                         |
 
 #### Usage Charts
 
@@ -280,7 +277,7 @@ Perso 플랫폼의 도메인 데이터는 대부분 **Space 단위**로 스코�
          → 201 Created (empty body)
          → 403 이면 SAS 만료, 1) 다시 호출
 
-  3) POST /file/api/upload/video   (또는 /audio)
+  3) PUT /file/api/upload/video   (또는 /audio)
          Body: { "fileUrl": "<blobSasUrl에서 '?' 이전까지>" , ... }
          → { "seq": 12345, ... }   ← 이 seq가 다른 API의 mediaSeq
   ```
@@ -294,7 +291,7 @@ Perso 플랫폼의 도메인 데이터는 대부분 **Space 단위**로 스코�
   1) POST /file/api/v1/video-translator/external/metadata
          → duration, resolution, size 프리뷰
   2) POST /file/api/v1/media/validate             (권장)
-  3) POST /file/api/upload/video/external
+  3) PUT /file/api/upload/video/external
          → { "seq": 12345, ... }   ← 이 seq를 mediaSeq로 사용
          ※ 동기 API. 서버가 다운로드 끝날 때까지 응답 지연 최대 10분
   ```

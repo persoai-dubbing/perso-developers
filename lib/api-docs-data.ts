@@ -770,11 +770,9 @@ export const fileCategory: ApiCategory = {
           description:
             "The type of file to download. Use the download-info endpoint to check which targets are available.",
           enum: [
-            "video",
             "dubbingVideo",
             "lipSyncVideo",
-            "originalSubtitle",
-            "translatedSubtitle",
+            "audioScript",
             "originalVoiceAudio",
             "voiceAudio",
             "backgroundAudio",
@@ -784,6 +782,8 @@ export const fileCategory: ApiCategory = {
             "originalVoiceSpeakers",
             "speakerSegmentExcel",
             "speakerSegmentWithTranslationExcel",
+            "scriptTimestamps",
+            "originalSubBackground",
           ],
         },
       ],
@@ -2105,7 +2105,7 @@ export const usageCategory: ApiCategory = {
           type: "string",
           required: true,
           description: "The type of media.",
-          enum: ["VIDEO", "AUDIO"],
+          enum: ["video", "audio"],
         },
         {
           name: "lipSync",
