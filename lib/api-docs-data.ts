@@ -1075,30 +1075,28 @@ export const dubbingCategory: ApiCategory = {
       response: {
         statusCode: 200,
         example: `{
-  "result": {
-    "seq": 101,
-    "projectType": "VIDEO",
-    "title": "My Translation Project",
-    "isEditable": true,
-    "durationMs": 120000,
-    "sourceLanguage": {
-      "code": "en",
-      "name": "English"
-    },
-    "targetLanguage": {
-      "code": "ko",
-      "name": "Korean"
-    },
-    "progress": 100,
-    "progressReason": "Completed",
-    "hasFailed": false,
-    "isLipSync": false,
-    "isLinkShared": false,
-    "projectGenerationType": "DUBBING",
-    "thumbnailUrl": "https://...",
-    "createDate": "2026-01-15T10:30:00Z",
-    "updateDate": "2026-01-15T11:00:00Z"
-  }
+  "seq": 101,
+  "projectType": "VIDEO",
+  "title": "My Translation Project",
+  "isEditable": true,
+  "durationMs": 120000,
+  "sourceLanguage": {
+    "code": "en",
+    "name": "English"
+  },
+  "targetLanguage": {
+    "code": "ko",
+    "name": "Korean"
+  },
+  "progress": 100,
+  "progressReason": "Completed",
+  "hasFailed": false,
+  "isLipSync": false,
+  "isLinkShared": false,
+  "projectGenerationType": "DUBBING",
+  "thumbnailUrl": "https://...",
+  "createDate": "2026-01-15T10:30:00Z",
+  "updateDate": "2026-01-15T11:00:00Z"
 }`,
       },
       errors: [
@@ -1179,33 +1177,31 @@ export const dubbingCategory: ApiCategory = {
       response: {
         statusCode: 200,
         example: `{
-  "result": {
-    "totalCount": 100,
-    "hasNext": true,
-    "pageSize": 10,
-    "nextVtOffset": 10,
-    "content": [
-      {
-        "seq": 1,
-        "title": "My Project",
-        "projectType": "VIDEO",
-        "durationMs": 120000,
-        "sourceLanguage": {
-          "code": "en",
-          "name": "English"
-        },
-        "targetLanguage": {
-          "code": "ko",
-          "name": "Korean"
-        },
-        "progress": 100,
-        "hasFailed": false,
-        "status": "created",
-        "projectGenerationType": "DUBBING",
-        "createDate": "2026-01-15T10:00:00Z"
-      }
-    ]
-  }
+  "totalCount": 100,
+  "hasNext": true,
+  "pageSize": 10,
+  "nextVtOffset": 10,
+  "content": [
+    {
+      "seq": 1,
+      "title": "My Project",
+      "projectType": "VIDEO",
+      "durationMs": 120000,
+      "sourceLanguage": {
+        "code": "en",
+        "name": "English"
+      },
+      "targetLanguage": {
+        "code": "ko",
+        "name": "Korean"
+      },
+      "progress": 100,
+      "hasFailed": false,
+      "status": "created",
+      "projectGenerationType": "DUBBING",
+      "createDate": "2026-01-15T10:00:00Z"
+    }
+  ]
 }`,
       },
     },
@@ -1249,35 +1245,33 @@ export const dubbingCategory: ApiCategory = {
       response: {
         statusCode: 200,
         example: `{
-  "result": {
-    "hasNext": false,
-    "retranslateAvailable": true,
-    "sentences": [
-      {
-        "seq": 1,
-        "speakerOrderIndex": 0,
-        "offsetMs": 0,
-        "durationMs": 3500,
-        "originalText": "Hello, welcome.",
-        "translatedText": "...",
-        "audioUrl": "https://...",
-        "matchingRate": {
-          "level": 3,
-          "levelType": "GOOD"
-        },
-        "rewrite": {
-          "speed": "normal",
-          "current": 120
-        }
+  "hasNext": false,
+  "retranslateAvailable": true,
+  "sentences": [
+    {
+      "seq": 1,
+      "speakerOrderIndex": 0,
+      "offsetMs": 0,
+      "durationMs": 3500,
+      "originalText": "Hello, welcome.",
+      "translatedText": "...",
+      "audioUrl": "https://...",
+      "matchingRate": {
+        "level": 3,
+        "levelType": "GOOD"
+      },
+      "rewrite": {
+        "speed": "normal",
+        "current": 120
       }
-    ],
-    "speakers": [
-      {
-        "speakerOrderIndex": 0,
-        "externalSpeakerSeq": "spk_001"
-      }
-    ]
-  }
+    }
+  ],
+  "speakers": [
+    {
+      "speakerOrderIndex": 0,
+      "externalSpeakerSeq": "spk_001"
+    }
+  ]
 }`,
       },
     },
@@ -1375,9 +1369,7 @@ export const dubbingCategory: ApiCategory = {
       response: {
         statusCode: 200,
         example: `{
-  "result": {
-    "shareQuery": "eyJhbGciOiJIUzI1NiJ9..."
-  }
+  "shareQuery": "eyJhbGciOiJIUzI1NiJ9..."
 }`,
       },
     },
@@ -1437,17 +1429,15 @@ export const dubbingCategory: ApiCategory = {
       response: {
         statusCode: 200,
         example: `{
-  "result": {
-    "title": "My Video",
-    "thumbnailUrl": "https://...",
-    "type": "VIDEO",
-    "durationMs": 120000,
-    "videoStatus": "COMPLETED",
-    "language": "ko",
-    "aspectRatio": "16:9",
-    "resolution": "1920x1080",
-    "sizeByte": 52428800
-  }
+  "title": "My Video",
+  "thumbnailUrl": "https://...",
+  "type": "VIDEO",
+  "durationMs": 120000,
+  "videoStatus": "COMPLETED",
+  "language": "ko",
+  "aspectRatio": "16:9",
+  "resolution": "1920x1080",
+  "sizeByte": 52428800
 }`,
       },
       errors: [
@@ -1545,9 +1535,7 @@ export const dubbingCategory: ApiCategory = {
       response: {
         statusCode: 200,
         example: `{
-  "result": {
-    "retranslateAvailable": true
-  }
+  "retranslateAvailable": true
 }`,
       },
     },
@@ -2326,25 +2314,23 @@ export const languageCategory: ApiCategory = {
       response: {
         statusCode: 200,
         example: `{
-  "result": {
-    "languages": [
-      {
-        "code": "en",
-        "name": "English",
-        "experiment": false
-      },
-      {
-        "code": "ko",
-        "name": "Korean",
-        "experiment": false
-      },
-      {
-        "code": "ja",
-        "name": "Japanese",
-        "experiment": true
-      }
-    ]
-  }
+  "languages": [
+    {
+      "code": "en",
+      "name": "English",
+      "experiment": false
+    },
+    {
+      "code": "ko",
+      "name": "Korean",
+      "experiment": false
+    },
+    {
+      "code": "ja",
+      "name": "Japanese",
+      "experiment": true
+    }
+  ]
 }`,
       },
     },
@@ -2389,10 +2375,8 @@ export const feedbackCategory: ApiCategory = {
       response: {
         statusCode: 200,
         example: `{
-  "result": {
-    "averageRating": 4.5,
-    "count": 10
-  }
+  "averageRating": 4.5,
+  "count": 10
 }`,
       },
       errors: [
@@ -2422,9 +2406,7 @@ export const feedbackCategory: ApiCategory = {
       response: {
         statusCode: 200,
         example: `{
-  "result": {
-    "rating": 4
-  }
+  "rating": 4
 }`,
       },
       errors: [
@@ -2478,36 +2460,34 @@ export const communitySpotlightCategory: ApiCategory = {
       response: {
         statusCode: 200,
         example: `{
-  "result": {
-    "totalCount": 100,
-    "totalPages": 10,
-    "page": 1,
-    "size": 10,
-    "isLast": false,
-    "contents": [
-      {
-        "seq": 1,
-        "title": "How to build with Framer",
-        "mediaType": "VIDEO",
-        "userName": "oh****on",
-        "thumbnailUrl": "/thumbnail.jpg",
-        "durationMs": 10000,
-        "sourceLanguage": {
-          "code": "en",
-          "name": "English"
-        },
-        "targetLanguage": {
-          "code": "ko",
-          "name": "Korean"
-        },
-        "isLipSync": true,
-        "feedbackAverage": {
-          "averageRating": 4.5,
-          "count": 10
-        }
+  "totalCount": 100,
+  "totalPages": 10,
+  "page": 1,
+  "size": 10,
+  "isLast": false,
+  "contents": [
+    {
+      "seq": 1,
+      "title": "How to build with Framer",
+      "mediaType": "VIDEO",
+      "userName": "oh****on",
+      "thumbnailUrl": "/thumbnail.jpg",
+      "durationMs": 10000,
+      "sourceLanguage": {
+        "code": "en",
+        "name": "English"
+      },
+      "targetLanguage": {
+        "code": "ko",
+        "name": "Korean"
+      },
+      "isLipSync": true,
+      "feedbackAverage": {
+        "averageRating": 4.5,
+        "count": 10
       }
-    ]
-  }
+    }
+  ]
 }`,
       },
     },
