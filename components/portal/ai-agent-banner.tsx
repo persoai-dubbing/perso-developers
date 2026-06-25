@@ -1,32 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Bot, Copy, Check, X } from "lucide-react";
+import { useState } from "react";
+import { Bot, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const LLM_URL = "https://developers.perso.ai/llms.txt";
-const DISMISS_KEY = "ai-agent-banner-dismissed";
 
 export function AiAgentBanner() {
-  const [dismissed, setDismissed] = useState(true);
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    const v = typeof window !== "undefined" ? localStorage.getItem(DISMISS_KEY) : null;
-    if (v !== "1") setDismissed(false);
-  }, []);
-
-  if (dismissed) return null;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(LLM_URL);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleDismiss = () => {
-    localStorage.setItem(DISMISS_KEY, "1");
-    setDismissed(true);
   };
 
   return (
@@ -66,13 +52,6 @@ export function AiAgentBanner() {
             </Button>
           </div>
         </div>
-        <button
-          onClick={handleDismiss}
-          className="shrink-0 rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
-          aria-label="Dismiss"
-        >
-          <X className="h-4 w-4" />
-        </button>
       </div>
     </div>
   );
