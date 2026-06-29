@@ -76,7 +76,7 @@ export function Sidebar({ mobile, onNavigate }: SidebarProps = {}) {
       !mobile && "fixed left-0 top-0 z-40"
     )}>
       <div className="flex h-16 items-center gap-2 border-b border-border px-6">
-        <a href={serviceUrl || "#"} className="cursor-pointer">
+        <a href={serviceUrl ? `${serviceUrl}/workspace` : "#"} className="cursor-pointer">
           <img
             decoding="auto"
             width="129"
