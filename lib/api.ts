@@ -209,6 +209,13 @@ async function apiRequest<T>(
   return response.json();
 }
 
+// 유저 프로필 타입
+export interface UserProfile {
+  userSeq: number;
+  userName?: string;
+  email?: string;
+}
+
 // 스페이스 정보 타입
 export interface SpaceInfo {
   spaceSeq: number;
@@ -265,6 +272,13 @@ export interface CreditHistoryPage {
   number: number;
   numberOfElements: number;
 }
+
+// 유저 API
+export const userApi = {
+  // 내 프로필 조회
+  getProfile: () =>
+    apiRequest<ApiResponse<UserProfile>>("/user/api/v1/users/profile"),
+};
 
 // 스페이스 API
 export const spaceApi = {
