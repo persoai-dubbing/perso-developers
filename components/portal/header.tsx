@@ -8,18 +8,21 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ApiSearch } from "@/components/portal/api-search";
 import { getConfig } from "@/lib/api";
-import type { SpaceInfo, CreditBalance } from "@/lib/api";
+import type { UserProfile } from "@/lib/api";
 
 interface HeaderProps {
   title: string;
   description?: string;
   authFailed?: boolean;
-  spaceInfo?: SpaceInfo | null;
-  creditBalance?: CreditBalance | null;
+  userProfile?: UserProfile | null;
   onMenuClick?: () => void;
 }
 
-export function Header({ title, description, authFailed, spaceInfo, creditBalance, onMenuClick }: HeaderProps) {
+function getDisplayName(profile: UserProfile): string {
+  return profile.userName || profile.email || "";
+}
+
+export function Header({ title, description, authFailed, userProfile, onMenuClick }: HeaderProps) {
   const [loginLink, setLoginLink] = useState("");
   const [isLocal, setIsLocal] = useState(false);
   const [token, setToken] = useState("");
@@ -126,7 +129,7 @@ export function Header({ title, description, authFailed, spaceInfo, creditBalanc
           </>
         )}
 
-        {/* Auth state: login button or plan/credit info */}
+        {/* Auth state: login button or user name */}
         {authFailed ? (
           loginLink && (
             <a
@@ -138,21 +141,19 @@ export function Header({ title, description, authFailed, spaceInfo, creditBalanc
             </a>
           )
         ) : (
-          <>
-            <Separator orientation="vertical" className="h-6" />
-            <div className="hidden sm:flex flex-col items-end px-3 py-1">
-              {spaceInfo && (
-                <span className="text-sm font-bold text-foreground leading-tight">
-                  {spaceInfo.planName}
+          userProfile && (
+            <>
+              <Separator orientation="vertical" className="hidden sm:block h-6" />
+              <div className="hidden sm:flex items-center gap-2">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                  {getDisplayName(userProfile).charAt(0).toUpperCase()}
                 </span>
-              )}
-              {creditBalance && (
-                <span className="text-xs text-muted-foreground leading-tight">
-                  {creditBalance.credit.toLocaleString()} credits
+                <span className="max-w-40 truncate text-sm font-medium text-foreground">
+                  {getDisplayName(userProfile)}
                 </span>
-              )}
-            </div>
-          </>
+              </div>
+            </>
+          )
         )}
       </div>
     </header>

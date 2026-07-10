@@ -1,12 +1,11 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
-import { spaceApi, creditApi } from "@/lib/api";
-import type { SpaceInfo, CreditBalance } from "@/lib/api";
+import { userApi } from "@/lib/api";
+import type { UserProfile } from "@/lib/api";
 
 interface PortalContextValue {
-  spaceInfo: SpaceInfo | null;
-  creditBalance: CreditBalance | null;
+  userProfile: UserProfile | null;
   authFailed: boolean;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -16,22 +15,14 @@ const PortalContext = createContext<PortalContextValue | null>(null);
 
 export function PortalProvider({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [spaceInfo, setSpaceInfo] = useState<SpaceInfo | null>(null);
-  const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [authFailed, setAuthFailed] = useState(false);
 
   useEffect(() => {
-    spaceApi
-      .getList()
+    userApi
+      .getProfile()
       .then((res) => {
-        const defaultSpace = res.result.find((s) => s.isDefaultSpaceOwned);
-        if (!defaultSpace) return;
-        setSpaceInfo(defaultSpace);
-
-        creditApi
-          .getBalance(defaultSpace.spaceSeq, "video_translator")
-          .then((creditRes) => setCreditBalance(creditRes.result))
-          .catch(() => {});
+        setUserProfile(res.result);
       })
       .catch(() => {
         setAuthFailed(true);
@@ -44,7 +35,7 @@ export function PortalProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <PortalContext.Provider
-      value={{ spaceInfo, creditBalance, authFailed, sidebarOpen, setSidebarOpen }}
+      value={{ userProfile, authFailed, sidebarOpen, setSidebarOpen }}
     >
       {children}
     </PortalContext.Provider>
