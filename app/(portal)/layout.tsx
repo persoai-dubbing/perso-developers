@@ -16,8 +16,7 @@ function getPageTitle(pathname: string): string {
 
 function PortalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { spaceInfo, creditBalance, authFailed, sidebarOpen, setSidebarOpen } =
-    usePortal();
+  const { userProfile, authFailed, sidebarOpen, setSidebarOpen } = usePortal();
   const title = getPageTitle(pathname);
 
   return (
@@ -34,8 +33,7 @@ function PortalShell({ children }: { children: React.ReactNode }) {
         <Header
           title={title}
           authFailed={authFailed}
-          spaceInfo={spaceInfo}
-          creditBalance={creditBalance}
+          userProfile={userProfile}
           onMenuClick={() => setSidebarOpen(true)}
         />
         <main className="p-4 sm:p-6">{children}</main>
