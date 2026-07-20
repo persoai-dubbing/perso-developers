@@ -80,7 +80,10 @@ export const spaceCategory: ApiCategory = {
       "seat": 10,
       "isDefaultSpaceOwned": true,
       "memberRole": "space_owner",
-      "useVideoTranslatorEdit": true
+      "useVideoTranslatorEdit": true,
+      "useStudioEdit": false,
+      "serviceType": "video_translator",
+      "originSpaceSeq": 1
     }
   ]
 }`,
@@ -120,7 +123,10 @@ export const spaceCategory: ApiCategory = {
     "seat": 10,
     "isDefaultSpaceOwned": true,
     "memberRole": "space_owner",
-    "useVideoTranslatorEdit": true
+    "useVideoTranslatorEdit": true,
+    "useStudioEdit": false,
+    "serviceType": "video_translator",
+    "originSpaceSeq": 1
   }
 }`,
       },
@@ -188,7 +194,7 @@ export const fileCategory: ApiCategory = {
           step: 3,
           title: "Register Uploaded File",
           description:
-            "Call Upload Video or Upload Audio to register the file. Pass the blob URL (the path portion of blobSasUrl before the '?') as fileUrl.",
+            "Call Upload Video or Upload Audio to register the file. Pass the blobSasUrl as fileUrl. Stripping the query string (the '?...' portion) is recommended — the file still registers with it included, but stripping it keeps the stored path stable.",
           method: "PUT",
           path: "/file/api/upload/video (or /audio)",
           auth: "XP-API-KEY",
@@ -251,7 +257,7 @@ export const fileCategory: ApiCategory = {
       path: "/file/api/upload/video",
       title: "Upload Video",
       description:
-        "Upload a video file via URL. The server downloads the file from the given URL and stores it. Before calling this endpoint, you must first obtain a SAS token via the Get SAS Token endpoint and upload the file to the returned blobSasUrl. Pass the blob URL as the fileUrl parameter. The response includes a seq (media sequence) which is used as mediaSeq when requesting a translation. Note: videoFilePath and thumbnailFilePath in the response are relative paths containing perso-storage. To access the actual file, prepend https://portal-media.perso.ai (e.g. https://portal-media.perso.ai/perso-storage/.../video.mp4).",
+        "Upload a video file via URL. The server downloads the file from the given URL and stores it. Before calling this endpoint, you must first obtain a SAS token via the Get SAS Token endpoint and upload the file to the returned blobSasUrl. Pass the blob URL as the fileUrl parameter. The response includes a seq (media sequence) which is used as mediaSeq when requesting a translation. Note: videoFilePath and thumbnailFilePath in the response are relative paths containing perso-storage. To access the actual file, prepend https://portal-media.perso.ai (e.g. https://portal-media.perso.ai/perso-storage/.../video.mp4). The originalName in the response has its file extension removed (e.g. 'my_video.mp4' becomes 'my_video').",
       requestBody: {
         fields: [
           {
@@ -264,7 +270,8 @@ export const fileCategory: ApiCategory = {
             name: "fileUrl",
             type: "string",
             required: true,
-            description: "Direct access URL of the video file.",
+            description:
+              "Direct access URL of the video file (the blobSasUrl from the SAS token step). Stripping the '?...' query string is recommended for a stable storage path, though it also registers with the query string included.",
           },
           {
             name: "fileName",
@@ -288,7 +295,8 @@ export const fileCategory: ApiCategory = {
   "videoFilePath": "/container/directory/uuid_20260219.mp4",
   "thumbnailFilePath": "/container/directory/uuid_20260219.webp",
   "size": 52428800,
-  "durationMs": 30000
+  "durationMs": 30000,
+  "fastMode": false
 }`,
       },
       errors: [
@@ -312,7 +320,7 @@ export const fileCategory: ApiCategory = {
       path: "/file/api/upload/audio",
       title: "Upload Audio",
       description:
-        "Upload an audio file via URL. The server downloads the file from the given URL and stores it. Before calling this endpoint, you must first obtain a SAS token via the Get SAS Token endpoint and upload the file to the returned blobSasUrl. Pass the blob URL as the fileUrl parameter. The response includes a seq (media sequence) which is used as mediaSeq when requesting a translation. Note: audioFilePath and thumbnailFilePath in the response are relative paths containing perso-storage. To access the actual file, prepend https://portal-media.perso.ai (e.g. https://portal-media.perso.ai/perso-storage/.../audio.mp3).",
+        "Upload an audio file via URL. The server downloads the file from the given URL and stores it. Before calling this endpoint, you must first obtain a SAS token via the Get SAS Token endpoint and upload the file to the returned blobSasUrl. Pass the blob URL as the fileUrl parameter. The response includes a seq (media sequence) which is used as mediaSeq when requesting a translation. Note: audioFilePath and thumbnailFilePath in the response are relative paths containing perso-storage. To access the actual file, prepend https://portal-media.perso.ai (e.g. https://portal-media.perso.ai/perso-storage/.../audio.mp3). The originalName in the response has its file extension removed (e.g. 'my_audio.mp3' becomes 'my_audio').",
       requestBody: {
         fields: [
           {
@@ -325,7 +333,8 @@ export const fileCategory: ApiCategory = {
             name: "fileUrl",
             type: "string",
             required: true,
-            description: "Direct access URL of the audio file.",
+            description:
+              "Direct access URL of the audio file (the blobSasUrl from the SAS token step). Stripping the '?...' query string is recommended for a stable storage path, though it also registers with the query string included.",
           },
           {
             name: "fileName",
@@ -349,7 +358,8 @@ export const fileCategory: ApiCategory = {
   "audioFilePath": "/container/directory/uuid_20260219.mp3",
   "thumbnailFilePath": "audio_thumb.png",
   "size": 5242880,
-  "durationMs": 180000
+  "durationMs": 180000,
+  "fastMode": false
 }`,
       },
       errors: [
@@ -469,7 +479,7 @@ export const fileCategory: ApiCategory = {
       path: "/file/api/upload/sas-token",
       title: "Get SAS Token",
       description:
-        "Issue an Azure Blob Storage SAS token for direct file upload. This is the first step for uploading video or audio files. The token expires 30 minutes after issuance. Upload your file to the returned blobSasUrl via a PUT request before the expiration time, then call the Upload Video or Upload Audio endpoint with the blob URL.",
+        "Issue an Azure Blob Storage SAS token for direct file upload. This is the first step for uploading video or audio files. The token expires 30 minutes after issuance. Upload your file to the returned blobSasUrl via a PUT request before the expiration time, then call the Upload Video or Upload Audio endpoint with the blob URL. Use the blobSasUrl host exactly as returned — do not hardcode it, as it may be perso-saas-file-frontdoor.perso.ai rather than portal-media.perso.ai. Note that expirationDatetime is a naive UTC timestamp with no timezone suffix; do not parse it and compare against local time (that makes it look already expired or near-expiry) — simply upload within 30 minutes of issuance.",
       queryParams: [
         {
           name: "fileName",
@@ -481,7 +491,7 @@ export const fileCategory: ApiCategory = {
       response: {
         statusCode: 200,
         example: `{
-  "blobSasUrl": "https://portal-media.perso.ai/{container}/{path}/uuid.mp4?sv=2024-11-04&se=2026-02-19T13%3A00%3A00Z&sr=b&sp=rw&sig=...",
+  "blobSasUrl": "https://perso-saas-file-frontdoor.perso.ai/perso-storage/{path}/uuid_20260720.mp4?sv=2024-11-04&se=2026-02-19T13%3A00%3A00Z&sr=b&sp=rw&sig=...",
   "expirationDatetime": "2026-02-19T13:00:00"
 }`,
       },
@@ -705,7 +715,20 @@ export const fileCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/{projectSeq}/spaces/{spaceSeq}/download-info",
       title: "Check Download Availability",
       description:
-        "Before downloading files, check which files are currently available for download in your project. Each field returns true/false to indicate availability. Some fields may return null depending on the project type (video vs audio). Use the corresponding download target value for any field that returned true when calling the download endpoint.",
+        "Before downloading files, check which files are currently available for download in your project. Each field returns true/false to indicate availability. Some fields may return null depending on the project type (video vs audio). Use the corresponding download target value for any field that returned true when calling the download endpoint.\n\n" +
+        "Mapping between download-info boolean fields and download target values:\n" +
+        "- hasTranslatedVideo -> target=dubbingVideo\n" +
+        "- hasLipSyncVideo -> target=lipSyncVideo\n" +
+        "- hasOriginalVoiceOnly -> target=originalVoiceAudio (original voice track)\n" +
+        "- hasTranslatedVoice -> target=voiceAudio (translated voice; returns 500 if the project has no translated voice, e.g. Audio Separation projects)\n" +
+        "- hasOriginalBackground / hasTranslatedBackground -> target=backgroundAudio\n" +
+        "- hasOriginalSpeakerAudioCollection -> target=originalVoiceSpeakers\n" +
+        "- hasSpeakerSegmentExcel -> target=speakerSegmentExcel\n" +
+        "- hasSpeakerSegmentWithTranslationExcel -> target=speakerSegmentWithTranslationExcel\n" +
+        "- hasScriptTimestamps -> target=scriptTimestamps\n" +
+        "- hasOriginalSubBackground -> target=originalSubBackground\n" +
+        "- hasZipDownload -> target=all (.tar archive)\n" +
+        "- hasOriginalSubtitle / hasTranslatedSubtitle / hasOriginalSubtitleVtt -> no individual target; SRT/VTT files are only included in the target=all archive",
       pathParams: [
         {
           name: "projectSeq",
@@ -732,12 +755,13 @@ export const fileCategory: ApiCategory = {
   "hasTranslatedVoice": true,
   "hasOriginalBackground": true,
   "hasTranslatedBackground": true,
-  "hasTranslateAudio": null,
-  "hasTranslatedVoiceWithBackground": null,
   "hasZipDownload": true,
   "hasOriginalSpeakerAudioCollection": false,
   "hasSpeakerSegmentExcel": true,
-  "hasSpeakerSegmentWithTranslationExcel": true
+  "hasSpeakerSegmentWithTranslationExcel": true,
+  "hasScriptTimestamps": true,
+  "hasOriginalSubtitleVtt": true,
+  "hasOriginalSubBackground": false
 }`,
       },
     },
@@ -747,7 +771,7 @@ export const fileCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/{projectSeq}/spaces/{spaceSeq}/download",
       title: "Download Files",
       description:
-        "Download project output files. Use the download-info endpoint first to check which files are available, then pass the corresponding target value.",
+        "Download project output files. Use the download-info endpoint first to check which files are available, then pass the corresponding target value. All returned download links are relative paths under /perso-storage/... — prepend https://portal-media.perso.ai to fetch them, and URL-encode the path since it may contain spaces or non-ASCII characters. zippedFileDownloadLink points to a .tar archive.",
       pathParams: [
         {
           name: "projectSeq",
@@ -768,7 +792,7 @@ export const fileCategory: ApiCategory = {
           type: "string",
           required: true,
           description:
-            "The type of file to download. Use the download-info endpoint to check which targets are available.",
+            "The type of file to download. Use the download-info endpoint to check which targets are available. See the download-info endpoint description for the mapping between download-info boolean fields and target values. Matching is case-insensitive (voicewithBackgroundAudio and voiceWithBackgroundAudio both work). An unknown value returns 400 VT4001; a value that is valid in the enum but not present for this project may return 500.",
           enum: [
             "dubbingVideo",
             "lipSyncVideo",
@@ -792,18 +816,19 @@ export const fileCategory: ApiCategory = {
         example: `{
   "result": {
     "videoFile": {
-      "videoDownloadLink": "https://..."
+      "videoDownloadLink": "/perso-storage/.../dubbing_video.mp4"
     },
     "audioFile": {
-      "voiceAudioDownloadLink": "https://...",
-      "backgroundAudioDownloadLink": "https://...",
-      "voiceWithBackgroundAudioDownloadLink": "https://..."
+      "voiceAudioDownloadLink": "/perso-storage/.../voice.wav",
+      "backgroundAudioDownloadLink": "/perso-storage/.../background.wav",
+      "voiceWithBackgroundAudioDownloadLink": "/perso-storage/.../voice_with_background.wav"
     },
     "srtFile": {
-      "originalSubtitleDownloadLink": "https://...",
-      "translatedSubtitleDownloadLink": "https://..."
+      "originalSubtitleDownloadLink": "/perso-storage/.../original.srt",
+      "translatedSubtitleDownloadLink": "/perso-storage/.../translated.srt",
+      "originalSubtitleVttDownloadLink": "/perso-storage/.../original.vtt"
     },
-    "zippedFileDownloadLink": "https://..."
+    "zippedFileDownloadLink": "/perso-storage/.../export.tar"
   }
 }`,
       },
@@ -837,7 +862,7 @@ export const dubbingCategory: ApiCategory = {
           step: 2,
           title: "Initialize Queue",
           description:
-            "Call the Usage API's Get User Queue endpoint to ensure the space has a translation queue. Without this, the first translation request in a new space will fail with 'space queue not found'.",
+            "Call the Usage API's Get User Queue endpoint to ensure the space has a translation queue. Despite being named 'Get User Queue', calling it with PUT creates/initializes the queue. Without this, the first translation request in a new space will fail with 'space queue not found'.",
           method: "PUT",
           path: "/video-translator/api/v1/projects/spaces/{spaceSeq}/queue",
           auth: "XP-API-KEY",
@@ -868,9 +893,9 @@ export const dubbingCategory: ApiCategory = {
           description:
             "Once complete, download the output files. Use the download-info endpoint first to check available file types.",
           method: "GET",
-          path: "/video-translator/api/v1/projects/{projectSeq}/spaces/{spaceSeq}/download?target=video",
+          path: "/video-translator/api/v1/projects/{projectSeq}/spaces/{spaceSeq}/download?target=dubbingVideo",
           auth: "XP-API-KEY",
-          note: "Available targets: video, dubbingVideo, lipSyncVideo, originalSubtitle, translatedSubtitle, voiceAudio, backgroundAudio, all, etc.",
+          note: "Working target values: dubbingVideo, lipSyncVideo, voiceAudio, originalVoiceAudio, backgroundAudio, voicewithBackgroundAudio, originalVoiceSpeakers, speakerSegmentExcel, speakerSegmentWithTranslationExcel, scriptTimestamps, originalSubBackground, audioScript, all. Subtitles (SRT) cannot be fetched as an individual target — they are only delivered inside the target=all archive (.tar). Requesting a file that download-info reports as false may return 500 rather than a 4xx.",
         },
       ],
     },
@@ -945,9 +970,14 @@ export const dubbingCategory: ApiCategory = {
                 name: "ttsModel",
                 type: "string",
                 required: false,
-                enum: ["ELEVEN_V2", "ELEVEN_V3"],
+                enum: ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"],
                 description:
-                  "TTS model to apply to this language. Required for DUBBING / LIPSYNC requests. " +
+                  "TTS model to apply to this language. Optional even for DUBBING / LIPSYNC — " +
+                  "if omitted, the server applies a default model supported by the language. " +
+                  "The specific default is not documented, so specify `ttsModel` explicitly if you need deterministic behavior. " +
+                  "If specified, it must be one of the target language's supportedTtsModels " +
+                  "or the request fails with 400 VT4009 (UNSUPPORTED_LANGUAGE_TTS_MODEL_PAIR). " +
+                  "Check the Language API's supportedTtsModels for the target language before specifying. " +
                   "Ignored for STT / AudioSeparation requests (may be omitted).",
               },
             ],
@@ -993,8 +1023,9 @@ export const dubbingCategory: ApiCategory = {
             description:
               "(Deprecated since 2026-05-14) Single TTS model applied to all target languages. " +
               "New integrations should specify `ttsModel` per language inside `targetLanguages`. " +
-              "ELEVEN_V2 (natural) or ELEVEN_V3 (emotional).",
-            enum: ["ELEVEN_V2", "ELEVEN_V3"],
+              "AUDIO_ENGINE_V3 (all languages), ELEVEN_V2 (natural), or ELEVEN_V3 (emotional). " +
+              "Each value must be in the target language's supportedTtsModels (see the Language API).",
+            enum: ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"],
           },
           {
             name: "title",
@@ -1010,7 +1041,7 @@ export const dubbingCategory: ApiCategory = {
   "sourceLanguageCode": "en",
   "targetLanguages": [
       { "languageCode": "ko", "ttsModel": "ELEVEN_V3" },
-      { "languageCode": "ja", "ttsModel": "ELEVEN_V2" }
+      { "languageCode": "ja", "ttsModel": "ELEVEN_V3" }
   ],
   "numberOfSpeakers": 2,
   "withLipSync": false,
@@ -1019,7 +1050,7 @@ export const dubbingCategory: ApiCategory = {
 }`,
       },
       response: {
-        statusCode: 201,
+        statusCode: 200,
         example: `{
   "result": {
     "startGenerateProjectIdList": [101, 102]
@@ -1078,6 +1109,7 @@ export const dubbingCategory: ApiCategory = {
   "seq": 101,
   "projectType": "VIDEO",
   "title": "My Translation Project",
+  "userName": "oh****on",
   "isEditable": true,
   "durationMs": 120000,
   "sourceLanguage": {
@@ -1091,9 +1123,12 @@ export const dubbingCategory: ApiCategory = {
   "progress": 100,
   "progressReason": "Completed",
   "hasFailed": false,
+  "failureReason": null,
   "isLipSync": false,
   "isLinkShared": false,
   "projectGenerationType": "DUBBING",
+  "usedFeature": [],
+  "experimentList": [],
   "thumbnailUrl": "https://...",
   "createDate": "2026-01-15T10:30:00Z",
   "updateDate": "2026-01-15T11:00:00Z"
@@ -1211,7 +1246,7 @@ export const dubbingCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/{projectSeq}/spaces/{spaceSeq}/script",
       title: "Get Script",
       description:
-        "Retrieve the project script with sentence-level translations, matching rates, and speaker information.",
+        "Retrieve the project script with sentence-level translations, matching rates, and speaker information. matchingRate and rewrite can be null for a given sentence. Each speaker exposes a projectSpeakerSeq, which is the value required by the Temp Save Draft endpoint.",
       pathParams: [
         {
           name: "projectSeq",
@@ -1246,16 +1281,20 @@ export const dubbingCategory: ApiCategory = {
         statusCode: 200,
         example: `{
   "hasNext": false,
+  "nextCursorId": null,
   "retranslateAvailable": true,
   "sentences": [
     {
       "seq": 1,
+      "externalScriptSeq": "pvtv-e1045225d769af98305367b722c1adfb",
       "speakerOrderIndex": 0,
       "offsetMs": 0,
       "durationMs": 3500,
+      "originalDraftText": "Hello, welcome.",
       "originalText": "Hello, welcome.",
       "translatedText": "...",
-      "audioUrl": "https://...",
+      "proofRead": false,
+      "audioUrl": "/perso-storage/.../audio.mp3",
       "matchingRate": {
         "level": 3,
         "levelType": "GOOD"
@@ -1269,7 +1308,9 @@ export const dubbingCategory: ApiCategory = {
   "speakers": [
     {
       "speakerOrderIndex": 0,
-      "externalSpeakerSeq": "spk_001"
+      "externalSpeakerSeq": "spk_001",
+      "projectSpeakerSeq": 12345,
+      "voiceId": "pvsp-1351dafa5135"
     }
   ]
 }`,
@@ -1304,6 +1345,8 @@ export const dubbingCategory: ApiCategory = {
     "progress": 65,
     "progressReason": "Transcribing",
     "hasFailed": false,
+    "failureReason": null,
+    "engineErrorMessage": null,
     "speedType": "fast",
     "expectedRemainingTimeMinutes": 3,
     "isCancelable": true
@@ -1317,7 +1360,7 @@ export const dubbingCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/{projectSeq}/spaces/{spaceSeq}/cancel",
       title: "Cancel Project",
       description:
-        "Cancel a pending project. Only available for GREEN zone projects in PENDING initial export state.",
+        "Cancel a pending project. Only available for GREEN zone projects in PENDING initial export state. Cancellation only works while the project is still queued (pending); when the GREEN queue is empty, processing starts immediately, so a 400 VT4004 (cancellation not allowed) is common even right after creation.",
       pathParams: [
         {
           name: "projectSeq",
@@ -1782,21 +1825,22 @@ export const editingCategory: ApiCategory = {
             description: "The draft original text to temporarily save.",
           },
           {
-            name: "speakerSeq",
-            type: "string",
+            name: "projectSpeakerSeq",
+            type: "integer",
             required: true,
-            description: "The speaker identifier to temporarily assign.",
+            description:
+              "The speaker identifier to temporarily assign. Required for project version 2 speaker changes. Obtain it from the speakers[].projectSpeakerSeq field of the Get Script response.",
           },
         ],
         example: `{
   "originalDraftText": "Draft translation text",
-  "speakerSeq": "spk_001"
+  "projectSpeakerSeq": 12345
 }`,
       },
       response: {
         statusCode: 200,
         example: `{
-  "result": {}
+  "result": null
 }`,
       },
     },
@@ -1946,9 +1990,7 @@ export const editingCategory: ApiCategory = {
       },
       response: {
         statusCode: 200,
-        example: `{
-  "result": {}
-}`,
+        example: `// Empty response body`,
       },
     },
     {
@@ -1982,9 +2024,7 @@ export const editingCategory: ApiCategory = {
       ],
       response: {
         statusCode: 200,
-        example: `{
-  "result": {}
-}`,
+        example: `// Empty response body`,
       },
       errors: [
         {
@@ -2078,7 +2118,7 @@ export const usageCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/spaces/{spaceSeq}/media/quota",
       title: "Estimate Quota Usage",
       description:
-        "Calculate the estimated quota that will be consumed for a given media file based on its type, duration, and translation settings.",
+        "Calculate the estimated quota that will be consumed for a given media file based on its type, duration, and translation settings. Quota is measured in seconds of media (a 9-second clip costs 9); enabling lipSync doubles it (a 9-second clip costs 18). width and height are required for both video and audio requests — omitting them returns a 500.",
       pathParams: [
         {
           name: "spaceSeq",
@@ -2110,13 +2150,13 @@ export const usageCategory: ApiCategory = {
         {
           name: "width",
           type: "integer",
-          required: false,
+          required: true,
           description: "Video width in pixels.",
         },
         {
           name: "height",
           type: "integer",
-          required: false,
+          required: true,
           description: "Video height in pixels.",
         },
         {
@@ -2131,7 +2171,8 @@ export const usageCategory: ApiCategory = {
         statusCode: 200,
         example: `{
   "result": {
-    "expectedUsedQuota": 5000
+    "expectedUsedQuota": 10.0,
+    "promotionExpectedUsedQuota": 10.0
   }
 }`,
       },
@@ -2142,7 +2183,7 @@ export const usageCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/spaces/{spaceSeq}/queue",
       title: "Get User Queue",
       description:
-        "Retrieve or initialize the queue for a user within a space. If no queue exists, a new one is automatically created and returned. This endpoint must be called before requesting a translation if the space does not yet have an initialized queue — otherwise the translation request will fail with a 'space queue not found' error. Both GET and PUT methods are supported. Internally, the service fetches the user's plan options from the Credit service, retrieves quota information, and looks up the TranslateQueue — creating a new one if it does not exist.",
+        "Despite the name, calling this with PUT initializes (creates) the queue if it does not exist. Retrieve or initialize the queue for a user within a space. If no queue exists, a new one is automatically created and returned. This endpoint must be called before requesting a translation if the space does not yet have an initialized queue — otherwise the translation request will fail with a 'space queue not found' error. Both GET and PUT methods are supported. Internally, the service fetches the user's plan options from the Credit service, retrieves quota information, and looks up the TranslateQueue — creating a new one if it does not exist.",
       pathParams: [
         {
           name: "spaceSeq",
@@ -2154,12 +2195,11 @@ export const usageCategory: ApiCategory = {
       response: {
         statusCode: 200,
         example: `{
-  "success": true,
-  "data": {
-    "userSeq": 12345,
-    "planName": "Free",
-    "usedQueueCount": 5,
-    "maxQueueCount": 10,
+  "result": {
+    "userSeq": 19507,
+    "planName": "pro",
+    "usedQueueCount": 0,
+    "maxQueueCount": 3,
     "redZoneQueueCount": 0
   }
 }`,
@@ -2310,25 +2350,38 @@ export const languageCategory: ApiCategory = {
       path: "/video-translator/api/v1/languages",
       title: "List Languages",
       description:
-        "Returns a list of all supported languages including their language codes and names. Experimental languages are flagged accordingly.",
+        "Returns a list of all supported languages including their language codes, names, and the TTS models each language supports. This endpoint is the only way to check TTS model support — there is no dedicated model-lookup endpoint. `supportedTtsModels` lists the valid TTS models when the language is used as a translation target; use it to validate `ttsModel` before submitting a translation (an unsupported pair returns 400 VT4009). The same `code` can appear multiple times, distinguished by `languageTag` (e.g. English (US) has `languageTag: \"default\"` while English (UK) has `languageTag: \"en-GB\"`; likewise pt-PT, es-ES). `code: \"auto\"` (Auto Detect) is for `sourceLanguageCode` only — it has an empty `supportedTtsModels` and cannot be a target. Experimental languages are flagged via `experiment`.",
       response: {
         statusCode: 200,
         example: `{
   "languages": [
     {
-      "code": "en",
-      "name": "English",
-      "experiment": false
+      "code": "auto",
+      "name": "Auto Detect",
+      "languageTag": "default",
+      "experiment": false,
+      "supportedTtsModels": []
     },
     {
-      "code": "ko",
-      "name": "Korean",
-      "experiment": false
+      "code": "en",
+      "name": "English (US)",
+      "languageTag": "default",
+      "experiment": false,
+      "supportedTtsModels": ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"]
+    },
+    {
+      "code": "en",
+      "name": "English (UK)",
+      "languageTag": "en-GB",
+      "experiment": false,
+      "supportedTtsModels": ["AUDIO_ENGINE_V3", "ELEVEN_V3"]
     },
     {
       "code": "ja",
       "name": "Japanese",
-      "experiment": true
+      "languageTag": "default",
+      "experiment": false,
+      "supportedTtsModels": ["AUDIO_ENGINE_V3", "ELEVEN_V3"]
     }
   ]
 }`,
@@ -2435,7 +2488,7 @@ export const communitySpotlightCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/recommended",
       title: "List Featured Projects",
       description:
-        "Retrieve a paginated list of projects featured in the Community Spotlight.",
+        "Retrieve a paginated list of projects featured in the Community Spotlight. This is a public endpoint — no XP-API-KEY is required.",
       queryParams: [
         {
           name: "page",
@@ -2454,7 +2507,7 @@ export const communitySpotlightCategory: ApiCategory = {
           name: "languageCode",
           type: "string",
           required: false,
-          description: "Filter by target language code (e.g. ko, en, ja).",
+          description: "Filter by source language code (e.g. ko, en, ja).",
         },
       ],
       response: {
@@ -2497,7 +2550,7 @@ export const communitySpotlightCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/recommended/{projectSeq}",
       title: "Get Featured Project",
       description:
-        "Retrieve detailed information about a specific featured project.",
+        "Retrieve detailed information about a specific featured project. This is a public endpoint — no XP-API-KEY is required. The response is not wrapped in a result object. File URLs are relative /perso-storage/... paths (prepend https://portal-media.perso.ai).",
       pathParams: [
         {
           name: "projectSeq",
@@ -2509,29 +2562,37 @@ export const communitySpotlightCategory: ApiCategory = {
       response: {
         statusCode: 200,
         example: `{
-  "result": {
-    "seq": 1,
-    "title": "How to build with Framer",
-    "mediaType": "VIDEO",
-    "userName": "oh****on",
-    "durationMs": 10000,
-    "sourceLanguage": {
-      "code": "en",
-      "name": "English"
-    },
-    "targetLanguage": {
-      "code": "ko",
-      "name": "Korean"
-    },
-    "originalFileUrl": "/original.mp4",
-    "translatedFileUrl": "/translated.mp4",
-    "lipSyncFileUrl": "/lip-sync.mp4",
-    "isLipSync": true,
-    "feedbackAverage": {
-      "averageRating": 4.5,
-      "count": 10
-    }
-  }
+  "seq": 1,
+  "title": "How to build with Framer",
+  "mediaType": "VIDEO",
+  "userName": "oh****on",
+  "thumbnailUrl": "/thumbnail.jpg",
+  "durationMs": 10000,
+  "sourceLanguage": {
+    "code": "en",
+    "name": "English (US)",
+    "languageTag": "default",
+    "experiment": false,
+    "supportedTtsModels": ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"]
+  },
+  "targetLanguage": {
+    "code": "ko",
+    "name": "Korean",
+    "languageTag": "default",
+    "experiment": false,
+    "supportedTtsModels": ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"]
+  },
+  "originalFileUrl": "/original.mp4",
+  "translatedFileUrl": "/translated.mp4",
+  "lipSyncFileUrl": "/lip-sync.mp4",
+  "subtitleFileUrl": "/subtitle.srt",
+  "isLipSync": true,
+  "feedbackAverage": {
+    "averageRating": 4.5,
+    "count": 10
+  },
+  "createDate": "2026-01-15T10:00:00Z",
+  "updateDate": "2026-01-15T11:00:00Z"
 }`,
       },
       errors: [
@@ -2544,7 +2605,7 @@ export const communitySpotlightCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/shared/{sharedQuery}",
       title: "Get Shared Project",
       description:
-        "Retrieve project information using an encrypted share query string.",
+        "Retrieve project information using an encrypted share query string. This is a public endpoint — no XP-API-KEY is required. The response is not wrapped in a result object. File URLs are relative /perso-storage/... paths (prepend https://portal-media.perso.ai).",
       pathParams: [
         {
           name: "sharedQuery",
@@ -2556,26 +2617,38 @@ export const communitySpotlightCategory: ApiCategory = {
       response: {
         statusCode: 200,
         example: `{
-  "result": {
-    "seq": 1,
-    "title": "How to build with Framer",
-    "projectType": "VIDEO",
-    "userName": "oh****on",
-    "durationMs": 10000,
-    "sourceLanguage": {
-      "code": "en",
-      "name": "English"
-    },
-    "targetLanguage": {
-      "code": "ko",
-      "name": "Korean"
-    },
-    "originalFileUrl": "/original.mp4",
-    "translatedFileUrl": "/translated.mp4",
-    "isLipSync": true
-  }
+  "seq": 1,
+  "title": "How to build with Framer",
+  "projectType": "VIDEO",
+  "userName": "oh****on",
+  "durationMs": 10000,
+  "sourceLanguage": {
+    "code": "en",
+    "name": "English (US)",
+    "languageTag": "default",
+    "experiment": false,
+    "supportedTtsModels": ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"]
+  },
+  "targetLanguage": {
+    "code": "ko",
+    "name": "Korean",
+    "languageTag": "default",
+    "experiment": false,
+    "supportedTtsModels": ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"]
+  },
+  "originalFileUrl": "/original.mp4",
+  "translatedFileUrl": "/translated.mp4",
+  "isLipSync": true
 }`,
       },
+      errors: [
+        {
+          code: "VT4035",
+          status: 403,
+          description:
+            "Sharing is disabled for this project (SHARED_NOT_ACCESSIBLE)",
+        },
+      ],
     },
   ],
 };
@@ -2595,7 +2668,8 @@ export const sttCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/spaces/{spaceSeq}/stt",
       title: "Create STT Project",
       description:
-        "Create a Speech-to-Text (STT) project from an uploaded media file. The mediaSeq is the seq value returned from the Upload Video or Upload Audio endpoint in the File API.",
+        "Create a Speech-to-Text (STT) project from an uploaded media file. The mediaSeq is the seq value returned from the Upload Video or Upload Audio endpoint in the File API. " +
+        "If you receive a 'space queue not found' error, first call PUT /video-translator/api/v1/projects/spaces/{spaceSeq}/queue (Usage API) to initialize the queue, then retry.",
       pathParams: [
         {
           name: "spaceSeq",
@@ -2635,7 +2709,7 @@ export const sttCategory: ApiCategory = {
 }`,
       },
       response: {
-        statusCode: 201,
+        statusCode: 200,
         example: `{
   "result": {
     "startGenerateProjectIdList": [101]
@@ -2677,7 +2751,7 @@ export const sttCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/{projectSeq}/spaces/{spaceSeq}/stt/script",
       title: "Get STT Project Script",
       description:
-        "Retrieve the script for a completed STT project. Uses cursor-based pagination — omit cursorId on the first request.",
+        "Retrieve the script for a completed STT project. Uses cursor-based pagination — omit cursorId on the first request. Each sentence's originalDraftText may be null; use originalText for the transcribed content. Each speaker's voiceId carries the same pvtv- identifier as externalSpeakerSeq.",
       pathParams: [
         {
           name: "projectSeq",
@@ -2720,14 +2794,17 @@ export const sttCategory: ApiCategory = {
       "speakerOrderIndex": 1,
       "offsetMs": 0,
       "durationMs": 1000,
-      "originalDraftText": "Hello, world!",
+      "originalDraftText": null,
       "originalText": "Hello, world!"
     }
   ],
   "speakers": [
     {
       "speakerOrderIndex": 1,
-      "externalSpeakerSeq": "pvtv-e1045225d769af98305367b722c1adfb"
+      "externalSpeakerSeq": "pvtv-e1045225d769af98305367b722c1adfb",
+      "voiceId": "pvtv-e1045225d769af98305367b722c1adfb",
+      "speakerSeq": 1,
+      "speakerName": "Speaker 1"
     }
   ]
 }`,
@@ -2751,7 +2828,8 @@ export const audioSeparationCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/spaces/{spaceSeq}/audio-separation",
       title: "Create Audio Separation Project",
       description:
-        "Create an Audio Separation project that splits a media file into voice and background audio tracks.",
+        "Create an Audio Separation project that splits a media file into voice and background audio tracks. " +
+        "If you receive a 'space queue not found' error, first call PUT /video-translator/api/v1/projects/spaces/{spaceSeq}/queue (Usage API) to initialize the queue, then retry.",
       pathParams: [
         {
           name: "spaceSeq",
@@ -2791,7 +2869,7 @@ export const audioSeparationCategory: ApiCategory = {
 }`,
       },
       response: {
-        statusCode: 201,
+        statusCode: 200,
         example: `{
   "result": {
     "startGenerateProjectIdList": [102]
@@ -2805,7 +2883,7 @@ export const audioSeparationCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/{projectSeq}/spaces/{spaceSeq}/audio-separation/script",
       title: "Get Audio Separation Project Script",
       description:
-        "Retrieve the script for a completed Audio Separation project. Uses cursor-based pagination — omit cursorId on the first request.",
+        "Retrieve the script for a completed Audio Separation project. Uses cursor-based pagination — omit cursorId on the first request. Each sentence's originalDraftText may be null; use originalText for the transcribed content. Each speaker's voiceId carries the same pvtv- identifier as externalSpeakerSeq.",
       pathParams: [
         {
           name: "projectSeq",
@@ -2848,7 +2926,7 @@ export const audioSeparationCategory: ApiCategory = {
       "speakerOrderIndex": 1,
       "offsetMs": 0,
       "durationMs": 1000,
-      "originalDraftText": "Hello, world!",
+      "originalDraftText": null,
       "originalText": "Hello, world!",
       "audioUrl": "/perso-storage/audio.mp3"
     }
@@ -2856,7 +2934,10 @@ export const audioSeparationCategory: ApiCategory = {
   "speakers": [
     {
       "speakerOrderIndex": 1,
-      "externalSpeakerSeq": "pvtv-e1045225d769af98305367b722c1adfb"
+      "externalSpeakerSeq": "pvtv-e1045225d769af98305367b722c1adfb",
+      "voiceId": "pvtv-e1045225d769af98305367b722c1adfb",
+      "speakerSeq": 1,
+      "speakerName": "Speaker 1"
     }
   ]
 }`,

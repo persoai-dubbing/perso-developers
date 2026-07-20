@@ -92,7 +92,8 @@ Try it에서 검증한 호출을 그대로 서버 코드에 옮기는 단계입�
 - Base URL: `https://api.perso.ai`
 - 인증: `XP-API-KEY: {YOUR_KEY}` 헤더
 - JSON 요청 시: `Content-Type: application/json`
-- 응답의 `perso-storage://` 경로는 `https://portal-media.perso.ai` 기준으로 해석(필요 시 리졸버 구현)
+- 응답의 `/perso-storage/...` 상대경로는 `https://portal-media.perso.ai`를 앞에 붙여 해석합니다. 경로에 공백·비ASCII가 그대로 포함되므로 URL 인코딩이 필수입니다(필요 시 리졸버 구현).
+- 업로드용 `blobSasUrl` 호스트는 `perso-saas-file-frontdoor.perso.ai`일 수 있으니, 응답 값을 그대로 사용하고 호스트를 하드코딩하지 마세요.
 
 ### 3.1 cURL
 
@@ -102,10 +103,18 @@ curl -X GET "https://api.perso.ai/portal/api/v1/spaces" \
 ```
 
 ```bash
-curl -X POST "https://api.perso.ai/video-translator/api/v1/" \
+curl -X POST "https://api.perso.ai/video-translator/api/v1/projects/spaces/{spaceSeq}/translate" \
      -H "XP-API-KEY: $PERSO_API_KEY" \
      -H "Content-Type: application/json" \
-     -d '{"spaceSeq": 123, "sourceLanguage": "en", "targetLanguage": "ko"}'
+     -d '{
+           "mediaSeq": 12345,
+           "isVideoProject": true,
+           "sourceLanguageCode": "en",
+           "targetLanguages": [{"languageCode": "ko", "ttsModel": "ELEVEN_V3"}],
+           "preferredSpeedType": "GREEN"
+         }'
+# 응답: 200 { "result": { "startGenerateProjectIdList": [101] } }
+# mediaSeq는 파일 업로드 플로우(§5)에서 얻습니다.
 ```
 
 ### 3.2 Node.js (fetch)
@@ -165,6 +174,7 @@ Perso 플랫폼의 도메인 데이터는 대부분 **Space 단위**로 스코�
 
 - 연동 시작 시점에 "이 호출은 어느 Space 데이터인지"를 명확히 정하고 상수·설정으로 관리하세요.
 - 서버 간 호출일 때도 `spaceSeq`는 **요청 측 책임**입니다.
+- **획득 방법**: `GET /portal/api/v1/spaces`로 조회합니다. 여러 개가 내려오면 `memberRole`(예: `space_owner`)과 `serviceType`(예: `"video_translator"`)을 보고 권한 있는 Space를 고르세요. 권한 없는 Space로 호출하면 `403`이 납니다.
 
 ### 3.5 비동기 작업 (Dubbing, STT, TTS 등)
 
@@ -172,10 +182,12 @@ Perso 플랫폼의 도메인 데이터는 대부분 **Space 단위**로 스코�
 
 일반적인 패턴:
 
-1. `POST /.../projects` → `projectId` 수신 (상태 `PENDING`)
-2. `GET /.../projects/{projectId}` 폴링 (interval 2~5초, exponential backoff 권장)
-3. 상태가 `COMPLETED`가 되면 결과 리소스 GET
-4. 실패(`FAILED`) 시 에러 본문의 code·message 확인
+1. 번역 요청 → `{"result": {"startGenerateProjectIdList": [...]}}` 수신. 배열이며 **타깃 언어당 1개**의 projectId가 담깁니다. (`PENDING` 같은 상태값은 없습니다.)
+2. `GET /video-translator/api/v1/projects/{projectSeq}/space/{spaceSeq}/progress`로 폴링합니다. `spaceSeq`가 필수이고, 경로 세그먼트는 **단수형 `space`**입니다(복수형 `spaces` 아님, 주의).
+3. 진행 상태는 `status`가 아니라 **`progressReason`** 필드입니다. 값: `Enqueue Pending | Slow Mode Pending | Uploading | Transcribing | Translating | Generating Voice | Analyzing Lip Sync | Applying Lip Sync | Completed | Failed`. `progressReason`이 `"Completed"`가 되면 결과 리소스 GET.
+4. 실패(`"Failed"`) 시 에러 본문의 `code`·`message` 확인.
+
+폴링은 **5초 이상 간격**을 두세요(5초 미만 폴링 금지). 지수 백오프 권장.
 
 폴링은 요청 핸들러 안에서 blocking으로 돌리지 말고 백그라운드 워커·큐(Celery, BullMQ, SQS 등)로 위임하세요.
 
@@ -191,7 +203,9 @@ Perso 플랫폼의 도메인 데이터는 대부분 **Space 단위**로 스코�
 | `429` | 레이트 리밋    | 백오프 후 재시도, 쿼터 설정 검토                         |
 | `5xx` | 서버 오류      | 재시도(지수 백오프), 지속 발생 시 Request ID와 함께 문의 |
 
-응답 JSON의 `errorCode` / `message`가 1차 디버깅 소스입니다. Usage 로그에서 **Request ID**를 확보해 문의하세요.
+응답 JSON의 `code`(사람이 읽는 `message`와 함께 내려옴)가 1차 디버깅 소스입니다. 기계 판별용으로는 별도의 `detailCode` 필드를 사용하세요(`errorCode`가 아닙니다). Usage 로그에서 **Request ID**를 확보해 문의하세요.
+
+**401 게이트웨이 인증 에러**: 키가 없으면 `{"code":"G0001"}`, 키가 잘못됐거나 만료됐으면 `{"code":"A0010"}`가 내려옵니다. 인증은 게이트웨이에서 먼저 걸리므로, 엔드포인트별 `F4001`류 401은 실제로 보기 어렵습니다.
 
 ---
 
@@ -261,7 +275,7 @@ Perso 플랫폼의 도메인 데이터는 대부분 **Space 단위**로 스코�
 - **요청이 로그에 안 보임** — API Key 필터가 특정 키로 고정, Time Range 부족, 집계 지연(1~2초) 확인.
 - **시각이 예상과 다름** — 상단 Timezone 토글(`UTC`/`KST`) 확인. 한쪽에서 바꾸면 다른 화면에도 반영됩니다.
 - **키 문자열 재확인 불가** — 설계상 생성 시 1회만 공개. 분실 시 Revoke 후 재발급.
-- **`perso-storage://` 경로가 안 열림** — `https://portal-media.perso.ai` 기준으로 해석해야 합니다. Base URL(`https://api.perso.ai`)과 다릅니다.
+- **`/perso-storage/...` 경로가 안 열림** — 응답은 스킴이 아니라 `/perso-storage/...` **상대경로**입니다. `https://portal-media.perso.ai`를 앞에 붙여 해석해야 합니다(Base URL `https://api.perso.ai`와 다름). 경로에 공백·비ASCII가 그대로 들어오므로 URL 인코딩이 필수입니다.
 - **파일 업로드 — 단일 API 호출이 아님**: Dubbing·STT·Lip Sync 등에 쓸 파일은 `POST /dubbing`에 직접 첨부하는 게 아니라, **별도의 3단계 업로드 플로우**로 먼저 `mediaSeq`를 만들고 그 값을 전달해야 합니다. 가장 자주 놓치는 포인트입니다.
 
   **(A) 직접 업로드 (로컬 파일 → Azure Blob)**
@@ -283,7 +297,8 @@ Perso 플랫폼의 도메인 데이터는 대부분 **Space 단위**로 스코�
   ```
 
   - (선택) 업로드 전에 `POST /file/api/v1/media/validate`로 용량·해상도·길이·확장자 사전 검증 → 긴 업로드 후 실패하는 사태 방지.
-  - `fileName`은 반드시 URL 인코딩. Step 2의 `fileUrl`에는 쿼리스트링 `?sig=...`를 **제외**한 블랍 URL만 넣습니다.
+  - `fileName`은 반드시 URL 인코딩. Step 3의 `fileUrl`에는 쿼리스트링 `?sig=...`를 제거한 블랍 URL을 넣기를 권장합니다(포함해도 등록은 됨).
+  - Step 1 응답의 `expirationDatetime`은 **타임존 표기 없는 UTC**입니다. 로컬 시간과 직접 비교하지 말고(그러면 이미 만료된 것처럼 보임), 발급 후 30분 안에 업로드하세요.
 
   **(B) 외부 플랫폼 (YouTube / TikTok / Google Drive)**
 
@@ -298,8 +313,8 @@ Perso 플랫폼의 도메인 데이터는 대부분 **Space 단위**로 스코�
 
   **전형적 실패 사례**
   - `POST /video-translator`에 파일을 직접 붙이거나, Step 3을 건너뛴 채 블랍 URL만 전달 → `400 / 404`.
-  - Step 2에 `XP-API-KEY`를 넣음 → Azure가 요청 거부.
-  - Step 2 이후 30분 지연 → SAS 만료 → Step 3에서 업로드된 파일을 찾지 못함.
-  - Step 3의 `fileUrl`에 `?sig=…` 쿼리스트링까지 포함 → 등록 실패.
+  - Step 2에 불필요한 인증 헤더를 넣음 — `XP-API-KEY`는 커스텀 헤더라 Azure가 무시하고 201로 성공하지만, `Authorization` 헤더는 요청을 실패시킬 수 있습니다. **불필요한 인증 헤더는 넣지 마세요(특히 `Authorization`).**
+  - SAS 만료(30분)는 Step 2 업로드에 적용됩니다. 만료 후 PUT은 `403`이므로 Step 1(SAS 재발급)부터 다시 시작하세요.
+  - Step 3의 `fileUrl`에 `?sig=…` 쿼리스트링이 포함돼 있어도 등록은 됩니다. 다만 저장 경로 안정성을 위해 쿼리스트링은 제거하고 전달하기를 권장합니다.
 
   상세 필드·응답 스키마는 사이드바 **API Reference → Media** 참고.
