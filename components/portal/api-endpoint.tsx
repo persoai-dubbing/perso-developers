@@ -160,14 +160,33 @@ export interface ApiEndpointProps {
   errors?: ErrorResponse[];
 }
 
-function ParameterRow({ param }: { param: Parameter }) {
+function ParameterRow({
+  param,
+  depth = 0,
+}: {
+  param: Parameter;
+  depth?: number;
+}) {
   return (
-    <div className="flex flex-col gap-1 py-3 border-b border-border last:border-b-0">
+    <div
+      className={cn(
+        "flex flex-col gap-1 py-3 border-b border-border last:border-b-0",
+        depth > 0 && "ml-3 border-l border-b-0 pl-3",
+      )}
+    >
       <div className="flex items-center gap-2">
         <code className="text-sm font-semibold text-foreground">
           {param.name}
         </code>
         <span className="text-xs text-muted-foreground">{param.type}</span>
+        {param.deprecated && (
+          <Badge
+            variant="outline"
+            className="text-[10px] px-1.5 py-0 h-4 border-amber-300 text-amber-600"
+          >
+            deprecated
+          </Badge>
+        )}
         {param.required ? (
           <Badge
             variant="outline"
@@ -203,6 +222,13 @@ function ParameterRow({ param }: { param: Parameter }) {
             >
               {v}
             </code>
+          ))}
+        </div>
+      )}
+      {param.fields && param.fields.length > 0 && (
+        <div className="mt-1">
+          {param.fields.map((child) => (
+            <ParameterRow key={child.name} param={child} depth={depth + 1} />
           ))}
         </div>
       )}

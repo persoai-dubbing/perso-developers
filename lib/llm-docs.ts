@@ -4,7 +4,7 @@ import {
   type ApiCategory,
   type ApiGuide,
 } from "@/lib/api-docs-data";
-import type { ApiEndpointProps } from "@/components/portal/api-endpoint";
+import type { ApiEndpointProps, Parameter } from "@/components/portal/api-endpoint";
 
 function renderGuide(guide: ApiGuide): string {
   const lines: string[] = [];
@@ -43,6 +43,22 @@ function renderGuide(guide: ApiGuide): string {
   return lines.join("\n");
 }
 
+function renderParamLines(p: Parameter, indent: number): string[] {
+  const pad = "  ".repeat(indent);
+  let desc = `${pad}- ${p.name} (${p.type}, ${p.required ? "required" : "optional"})`;
+  if (p.deprecated) desc += " (deprecated)";
+  desc += `: ${p.description}`;
+  if (p.default) desc += ` (default: ${p.default})`;
+  if (p.enum) desc += ` [${p.enum.join(", ")}]`;
+  const out = [desc];
+  if (p.fields?.length) {
+    for (const child of p.fields) {
+      out.push(...renderParamLines(child, indent + 1));
+    }
+  }
+  return out;
+}
+
 function renderEndpoint(ep: ApiEndpointProps): string {
   const lines: string[] = [];
   lines.push(`### ${ep.method} ${ep.path}`);
@@ -53,9 +69,7 @@ function renderEndpoint(ep: ApiEndpointProps): string {
   if (ep.pathParams?.length) {
     lines.push("Path parameters:");
     for (const p of ep.pathParams) {
-      lines.push(
-        `  - ${p.name} (${p.type}, ${p.required ? "required" : "optional"}): ${p.description}`,
-      );
+      lines.push(...renderParamLines(p, 1));
     }
     lines.push("");
   }
@@ -63,10 +77,7 @@ function renderEndpoint(ep: ApiEndpointProps): string {
   if (ep.queryParams?.length) {
     lines.push("Query parameters:");
     for (const p of ep.queryParams) {
-      let desc = `  - ${p.name} (${p.type}, ${p.required ? "required" : "optional"}): ${p.description}`;
-      if (p.default) desc += ` (default: ${p.default})`;
-      if (p.enum) desc += ` [${p.enum.join(", ")}]`;
-      lines.push(desc);
+      lines.push(...renderParamLines(p, 1));
     }
     lines.push("");
   }
@@ -74,10 +85,7 @@ function renderEndpoint(ep: ApiEndpointProps): string {
   if (ep.requestBody) {
     lines.push("Request body:");
     for (const f of ep.requestBody.fields) {
-      let desc = `  - ${f.name} (${f.type}, ${f.required ? "required" : "optional"}): ${f.description}`;
-      if (f.default) desc += ` (default: ${f.default})`;
-      if (f.enum) desc += ` [${f.enum.join(", ")}]`;
-      lines.push(desc);
+      lines.push(...renderParamLines(f, 1));
     }
     lines.push("");
     lines.push("Request example:");
@@ -132,12 +140,16 @@ const CRITICAL_RULES = `## CRITICAL RULES (read before writing any code)
 These are the most common failure points. Apply them by default.
 
 1. **Authentication header is \`XP-API-KEY\`, not \`Authorization: Bearer\`.**
-   - Every request to ${apiDocsConfig.apiBaseUrl} must include \`XP-API-KEY: <your-key>\`.
+   - Every request to ${apiDocsConfig.apiBaseUrl} must include \`XP-API-KEY: <your-key>\`, except a few public community endpoints (Community Spotlight: List/Get Featured Projects and Get Shared Project) which need no auth.
    - Bearer JWT is never used for this API.
 
 2. **Multi-tenancy via \`spaceSeq\`.**
    - Most domain endpoints require a \`spaceSeq\` (Space ID) in the request body or query.
    - Missing \`spaceSeq\` is the #1 cause of empty lists or 404s — when in doubt, pass it explicitly.
+   - Obtain \`spaceSeq\` from \`GET /portal/api/v1/spaces\` (the Space API).
+   - If several spaces are returned, pick one you have permission for: check \`memberRole\`
+     (e.g. \`space_owner\`) and \`serviceType\` (dubbing work uses \`"video_translator"\`).
+     Using a space you lack permission on returns 403.
 
 3. **File upload is a 3-step flow, not a single call.**
    Do NOT try to attach binary files to Dubbing/STT/Lip-Sync requests directly. First produce a \`mediaSeq\`:
@@ -147,22 +159,37 @@ These are the most common failure points. Apply them by default.
    Step 2:  PUT  {blobSasUrl}              (direct to Azure Blob, NOT ${apiDocsConfig.apiBaseUrl})
                 Headers: x-ms-blob-type: BlockBlob
                 Body: raw file bytes
-                DO NOT send XP-API-KEY on this request.
+                Use the blobSasUrl exactly as returned. Do NOT hardcode the host — it may be
+                perso-saas-file-frontdoor.perso.ai rather than portal-media.perso.ai.
+                No XP-API-KEY is needed here (the SAS signature is the auth); if sent it is ignored.
                 201 on success. 403 = SAS expired, go back to Step 1.
    Step 3:  PUT /file/api/upload/video   (or /audio)
-                Body: { "fileUrl": "<blobSasUrl with the '?...' query string stripped>", ... }
+                Body: { "fileUrl": "<blobSasUrl>", ... }
                 -> { "seq": <number> }    // use this as mediaSeq in downstream APIs
+                Stripping the '?...' query string from fileUrl is recommended (the file still
+                registers with it, but strip it for stable storage paths).
    \`\`\`
    For YouTube/TikTok/Drive URLs, use the External flow instead: \`external/metadata\` → \`media/validate\` → \`upload/video/external\`.
 
-4. **Long-running jobs return an ID — poll it.**
-   - Dubbing, STT, Lip-Sync, TTS create a project and return immediately with a \`projectId\` (status \`PENDING\`).
-   - Poll \`GET /.../projects/{projectId}\` every 2–5 seconds (exponential backoff recommended) until status is \`COMPLETED\` or \`FAILED\`.
+4. **Long-running jobs return generated project IDs — poll them.**
+   - Dubbing, STT, Audio Separation, Lip-Sync create projects and return immediately with
+     \`{ "result": { "startGenerateProjectIdList": [101] } }\`. There can be more than one ID
+     (one per target language) — poll each.
+   - Poll \`GET /video-translator/api/v1/projects/{projectSeq}/space/{spaceSeq}/progress\`
+     (note the singular \`space\`; \`spaceSeq\` is required) at intervals of at least 5 seconds.
+   - Status lives in \`progressReason\`, not \`status\`. Values:
+     \`Enqueue Pending | Slow Mode Pending | Uploading | Transcribing | Translating |
+     Generating Voice | Analyzing Lip Sync | Applying Lip Sync | Completed | Failed\`.
+     Done when \`progressReason === "Completed"\`; failed when \`"Failed"\` (see \`hasFailed\`).
+   - Treat \`expectedRemainingTimeMinutes\` as a rough hint only — it can go negative after completion.
    - Never block an HTTP handler on the polling loop — use a background worker/queue.
 
 5. **Response file paths resolve against \`${apiDocsConfig.storageBaseUrl}\`, not the API base.**
-   - Fields like \`videoFilePath\`, \`audioFilePath\`, \`thumbnailFilePath\` contain relative paths under \`/perso-storage/...\`.
+   - Fields like \`videoFilePath\`, \`audioFilePath\`, \`thumbnailFilePath\`, download links, \`audioUrl\`,
+     and \`thumbnailUrl\` contain relative paths under \`/perso-storage/...\`.
    - Prepend \`${apiDocsConfig.storageBaseUrl}\` (not \`${apiDocsConfig.apiBaseUrl}\`) to download the file.
+   - These paths can contain spaces and non-ASCII characters verbatim, so URL-encode the path
+     when fetching — an unencoded path fails.
 
 6. **HTTP error codes follow a predictable map.**
    - 401 = \`XP-API-KEY\` header missing, misspelled, or key is Expired/Revoked.
@@ -170,6 +197,15 @@ These are the most common failure points. Apply them by default.
    - 404 = usually \`spaceSeq\` or resource ID wrong. Verify the IDs before assuming the endpoint is broken.
    - 429 = rate limited. Back off exponentially.
    - 5xx = retry with backoff; include the Request ID from Usage logs when escalating.
+
+   Error response bodies come in a few distinct shapes — parse defensively:
+   - Gateway auth errors (handled before routing, so per-endpoint 401s are rarely seen directly):
+     missing key \`{"code":"G0001","message":"...","status":"UNAUTHORIZED"}\`;
+     invalid/expired key \`{"code":"A0010","message":"...","status":"UNAUTHORIZED"}\`.
+   - Domain errors: \`{"code":"VT4009","detailCode":"UNSUPPORTED_LANGUAGE_TTS_MODEL_PAIR","message":"...","status":"BAD_REQUEST"}\`.
+     The machine-readable field is \`code\` (not \`errorCode\`); \`detailCode\` disambiguates the reason.
+   - Missing required parameter (RFC 7807): \`{"type":"about:blank","title":"Bad Request","status":400,"detail":"Required parameter 'memberRole' is not present.",...}\`.
+   - Some server errors return the raw Spring shape: \`{"timestamp":"...","status":500,"error":"...","path":"..."}\`.
 
 7. **\`fileName\` for SAS token must be URL-encoded.** Spaces, Korean/Japanese characters, parentheses all need encoding.
 
