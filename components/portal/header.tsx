@@ -16,13 +16,17 @@ interface HeaderProps {
   authFailed?: boolean;
   userProfile?: UserProfile | null;
   onMenuClick?: () => void;
+  /** Hide the API Status link and API search */
+  hideTools?: boolean;
+  /** Render a brand logo instead of the text title */
+  logo?: { src: string; alt: string };
 }
 
 function getDisplayName(profile: UserProfile): string {
   return profile.userName || profile.email || "";
 }
 
-export function Header({ title, description, authFailed, userProfile, onMenuClick }: HeaderProps) {
+export function Header({ title, description, authFailed, userProfile, onMenuClick, hideTools, logo }: HeaderProps) {
   const [loginLink, setLoginLink] = useState("");
   const [isLocal, setIsLocal] = useState(false);
   const [token, setToken] = useState("");
@@ -60,26 +64,38 @@ export function Header({ title, description, authFailed, userProfile, onMenuClic
             <Menu className="h-5 w-5" />
           </Button>
         )}
-        <div className="min-w-0">
-          <h1 className="text-lg sm:text-xl font-semibold text-foreground truncate">{title}</h1>
-          {description && (
-            <p className="text-sm text-muted-foreground truncate">{description}</p>
-          )}
-        </div>
+        {logo ? (
+          <img
+            src={logo.src}
+            alt={logo.alt}
+            className="block h-8 w-auto object-contain"
+          />
+        ) : (
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-semibold text-foreground truncate">{title}</h1>
+            {description && (
+              <p className="text-sm text-muted-foreground truncate">{description}</p>
+            )}
+          </div>
+        )}
 
       </div>
 
       <div className="flex items-center gap-3 shrink-0">
-        <a
-          href="https://perso-developers.statuspage.io"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Activity className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">API Status</span>
-        </a>
-        <ApiSearch />
+        {!hideTools && (
+          <>
+            <a
+              href="https://perso-developers.statuspage.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Activity className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">API Status</span>
+            </a>
+            <ApiSearch />
+          </>
+        )}
         {/* Local profile access token input */}
         {isLocal && (
           <>
