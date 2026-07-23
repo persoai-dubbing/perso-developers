@@ -1845,6 +1845,91 @@ export const editingCategory: ApiCategory = {
       },
     },
     {
+      id: "add-speaker-from-sentence",
+      method: "POST",
+      path: "/video-translator/api/v1/projects/{projectSeq}/spaces/{spaceSeq}/speakers/from-sentence",
+      title: "Add Speaker from Sentence",
+      description:
+        "Add a new speaker to a dubbing project by cloning a voice from a reference sentence. " +
+        "The original speaker audio of the reference sentence segment becomes the clone source, and the request " +
+        "completes synchronously once the clone is ready (typically a few seconds). " +
+        "The speaker name (e.g. 'Speaker 3') and speakerOrderIndex are assigned automatically by the system — " +
+        "the next number after the project's highest existing speaker order (indexes of deleted speakers are never reused); " +
+        "the order index matches the SPEAKER_NN labels used in deliverables. " +
+        "The reference sentence is also reassigned to the new speaker as a draft change, so regenerate its audio afterwards to apply the new voice. " +
+        "Pass the sentences[].seq value from the Get Script response as sourceSentenceSeq. " +
+        "After adding, call Get Script again to obtain the new speaker's projectSpeakerSeq for use with the Temp Save Draft endpoint.",
+      pathParams: [
+        {
+          name: "projectSeq",
+          type: "integer",
+          required: true,
+          description: "The unique identifier of the project.",
+        },
+        {
+          name: "spaceSeq",
+          type: "integer",
+          required: true,
+          description: "The unique identifier of the space.",
+        },
+      ],
+      requestBody: {
+        fields: [
+          {
+            name: "sourceSentenceSeq",
+            type: "integer",
+            required: true,
+            description:
+              "The reference sentence identifier. The original speaker audio of this sentence segment is used as the clone source. Use the sentences[].seq value from the Get Script response.",
+          },
+        ],
+        example: `{
+  "sourceSentenceSeq": 1234
+}`,
+      },
+      response: {
+        statusCode: 200,
+        example: `{
+  "result": {
+    "seq": 15,
+    "projectSeq": 100,
+    "audioSpeakerSeq": "pvtv-e1045225d769af98305367b722c1adfb",
+    "displayName": "Speaker 3"
+  }
+}`,
+      },
+      errors: [
+        { code: "VT4041", status: 404, description: "Project not found" },
+        {
+          code: "VT4042",
+          status: 404,
+          description:
+            "Reference sentence not found, or it does not belong to this project",
+        },
+        {
+          code: "VT4007",
+          status: 400,
+          description:
+            "Not a dubbing project — sentence-based speaker add is available for dubbing projects only",
+        },
+        {
+          code: "VT4037",
+          status: 403,
+          description: "Editing is not available on the Free plan",
+        },
+        {
+          code: "VT4099",
+          status: 409,
+          description: "Project version 2 or later is required",
+        },
+        {
+          code: "VT40915",
+          status: 409,
+          description: "Speaker count limit exceeded for this project",
+        },
+      ],
+    },
+    {
       id: "match-rewrite",
       method: "POST",
       path: "/video-translator/api/v1/project/{projectSeq}/audio-sentence/{audioSentenceSeq}/match-rewrite",
