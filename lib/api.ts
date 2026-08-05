@@ -209,11 +209,16 @@ async function apiRequest<T>(
   return response.json();
 }
 
-// 유저 프로필 타입
+// 유저 프로필 타입 — the API returns more fields; provider/createDate are read by the /connect
+// onboarding analytics (signup vs login classification).
 export interface UserProfile {
   userSeq: number;
   userName?: string;
   email?: string;
+  /** "email" | "google" | "ms" — how the account was created */
+  provider?: string;
+  /** account creation date-time */
+  createDate?: string;
 }
 
 // 스페이스 정보 타입

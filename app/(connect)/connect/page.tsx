@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,12 @@ import {
 import { apiKeyApi, ApiError, getConfig } from "@/lib/api";
 import type { ApiKey, ApiKeyExpirePeriod } from "@/lib/api";
 import { usePortal } from "@/lib/portal-context";
+import {
+  classifyAuthKind,
+  initConnectAnalytics,
+  markLoginStart,
+  trackConnect,
+} from "@/lib/connect-analytics";
 
 // The plugin opens this page as:
 //   /connect?port=<local listener port>&name=<suggested key name>&state=<opaque echo token>
@@ -167,8 +173,24 @@ function ConnectContent() {
   const port =
     Number.isInteger(portParam) && portParam > 0 && portParam < 65536 ? portParam : null;
   const stateToken = searchParams.get("state") || undefined;
+  initConnectAnalytics(searchParams.get("did")); // identity contract: see lib/connect-analytics.ts
 
   const [step, setStep] = useState<Step>("form");
+  const pageViewSent = useRef(false);
+  useEffect(() => {
+    if (pageViewSent.current || (!userProfile && !authFailed)) return; // wait for the auth check
+    pageViewSent.current = true;
+    if (userProfile) {
+      const authKind = classifyAuthKind(userProfile.createDate); // signup|login, only after a sign-in round trip
+      trackConnect("connect_page_view", {
+        logged_in: true,
+        ...(authKind ? { auth_kind: authKind } : {}),
+        ...(userProfile.provider ? { auth_method: userProfile.provider } : {}),
+      });
+    } else {
+      trackConnect("connect_page_view", { logged_in: false });
+    }
+  }, [userProfile, authFailed]);
   const [keyName, setKeyName] = useState(
     () => (searchParams.get("name") || "perso-dubbing").slice(0, 16)
   );
@@ -181,6 +203,7 @@ function ConnectContent() {
 
   const authorize = async () => {
     setStep("authorizing");
+    trackConnect("connect_authorize_click", { expire_period: expiry });
     try {
       const response = await apiKeyApi.create({
         apiKeyName: keyName || undefined,
@@ -188,20 +211,25 @@ function ConnectContent() {
       });
       const created = response.result;
       setCreatedKey(created);
+      trackConnect("connect_key_result", { result: "success", expire_period: expiry });
 
       if (port && (await deliverKey(port, deliveryPayload(created, stateToken)))) {
+        trackConnect("connect_key_delivered", { retried: false });
         setStep("done");
       } else {
+        if (port) trackConnect("connect_delivery_failed", {}); // portless mode is manual by design, not a failure
         setStep("manual");
       }
     } catch (err) {
-      if (
-        err instanceof ApiError &&
-        (err.statusCode === 401 || err.statusCode === 403) &&
-        (await redirectToLogin())
-      ) {
-        return;
+      if (err instanceof ApiError && (err.statusCode === 401 || err.statusCode === 403)) {
+        markLoginStart();
+        if (await redirectToLogin()) return; // expired session auto-recovers via sign-in — not a failure
       }
+      trackConnect("connect_key_result", {
+        result: "fail",
+        expire_period: expiry,
+        error_code: err instanceof ApiError ? err.code || String(err.statusCode) : "unknown",
+      });
       setErrorMessage(err instanceof ApiError ? err.message : "The authorization request failed.");
       setStep("error");
     }
@@ -214,6 +242,7 @@ function ConnectContent() {
     const delivered = await deliverKey(port, deliveryPayload(createdKey, stateToken));
     setIsRetrying(false);
     if (delivered) {
+      trackConnect("connect_key_delivered", { retried: true });
       setStep("done");
     } else {
       setRetryFailed(true);
@@ -222,6 +251,7 @@ function ConnectContent() {
 
   const copyKey = async () => {
     if (!createdKey) return;
+    trackConnect("connect_manual_copy", { retry_failed: retryFailed });
     await navigator.clipboard.writeText(createdKey.apiKey);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -260,7 +290,11 @@ function ConnectContent() {
             <Button
               variant="outline"
               className="w-full gap-2.5"
-              onClick={() => startSocialSignIn("google")}
+              onClick={() => {
+                trackConnect("connect_login_start", { auth_method: "google" });
+                markLoginStart();
+                void startSocialSignIn("google");
+              }}
             >
               <GoogleIcon />
               Continue with Google
@@ -268,7 +302,11 @@ function ConnectContent() {
             <Button
               variant="outline"
               className="w-full gap-2.5"
-              onClick={() => startSocialSignIn("azure")}
+              onClick={() => {
+                trackConnect("connect_login_start", { auth_method: "ms" });
+                markLoginStart();
+                void startSocialSignIn("azure");
+              }}
             >
               <MicrosoftIcon />
               Continue with Microsoft
@@ -276,7 +314,11 @@ function ConnectContent() {
             <Button
               variant="outline"
               className="w-full border-dashed text-muted-foreground"
-              onClick={() => void redirectToLogin()}
+              onClick={() => {
+                trackConnect("connect_login_start", { auth_method: "email" });
+                markLoginStart();
+                void redirectToLogin();
+              }}
             >
               Continue with email
             </Button>
