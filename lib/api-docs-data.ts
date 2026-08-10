@@ -614,7 +614,7 @@ export const fileCategory: ApiCategory = {
         {
           code: "F4009",
           status: 400,
-          description: "Video duration too short (min 5s)",
+          description: "Video duration too short (min 1s)",
         },
         {
           code: "F40010",
