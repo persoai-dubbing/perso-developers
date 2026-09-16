@@ -49,8 +49,15 @@ function renderParamLines(p: Parameter, indent: number): string[] {
   if (p.deprecated) desc += " (deprecated)";
   desc += `: ${p.description}`;
   if (p.default) desc += ` (default: ${p.default})`;
-  if (p.enum) desc += ` [${p.enum.join(", ")}]`;
+  if (p.enum && !p.enumDescriptions) desc += ` [${p.enum.join(", ")}]`;
   const out = [desc];
+  if (p.enum && p.enumDescriptions) {
+    for (const v of p.enum) {
+      const flag = p.deprecatedValues?.includes(v) ? " (deprecated)" : "";
+      out.push(`${pad}  - ${v}${flag}: ${p.enumDescriptions[v] ?? ""}`);
+    }
+  }
+  if (p.note) out.push(`${pad}  ${p.noteTitle ?? "Deprecation notice"}: ${p.note}`);
   if (p.fields?.length) {
     for (const child of p.fields) {
       out.push(...renderParamLines(child, indent + 1));
@@ -64,6 +71,10 @@ function renderEndpoint(ep: ApiEndpointProps): string {
   lines.push(`### ${ep.method} ${ep.path}`);
   lines.push(`**${ep.title}**`);
   lines.push(ep.description);
+  if (ep.notes?.length) {
+    for (const n of ep.notes) lines.push(`- ${n}`);
+  }
+  if (ep.note) lines.push(`${ep.noteTitle ?? "Deprecation notice"}: ${ep.note}`);
   lines.push("");
 
   if (ep.pathParams?.length) {

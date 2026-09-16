@@ -132,6 +132,14 @@ export interface Parameter {
   default?: string;
   enum?: string[];
   deprecated?: boolean;
+  /** One-line description per enum value, keyed by the value. */
+  enumDescriptions?: Record<string, string>;
+  /** Enum values that are deprecated — rendered with a badge. */
+  deprecatedValues?: string[];
+  /** Highlighted notice shown under the description (e.g. a sunset schedule). */
+  note?: string;
+  /** Title of the notice. Defaults to "Deprecation notice". */
+  noteTitle?: string;
   fields?: Parameter[];
 }
 
@@ -147,6 +155,12 @@ export interface ApiEndpointProps {
   path: string;
   title: string;
   description: string;
+  /** Short bullet points shown under the description. */
+  notes?: string[];
+  /** Highlighted notice shown under the description (e.g. a sunset schedule). */
+  note?: string;
+  /** Title of the notice. Defaults to "Deprecation notice". */
+  noteTitle?: string;
   pathParams?: Parameter[];
   queryParams?: Parameter[];
   requestBody?: {
@@ -212,7 +226,7 @@ function ParameterRow({
           </code>
         </p>
       )}
-      {param.enum && (
+      {param.enum && !param.enumDescriptions && (
         <div className="flex items-center gap-1 flex-wrap">
           <span className="text-xs text-muted-foreground">Values:</span>
           {param.enum.map((v) => (
@@ -223,6 +237,39 @@ function ParameterRow({
               {v}
             </code>
           ))}
+        </div>
+      )}
+      {param.enum && param.enumDescriptions && (
+        <div className="flex flex-col gap-1">
+          <span className="text-xs text-muted-foreground">Values:</span>
+          <ul className="flex flex-col gap-1 pl-1">
+            {param.enum.map((v) => (
+              <li key={v} className="flex items-baseline gap-2 text-xs">
+                <code className="rounded bg-secondary px-1 py-0.5 text-[10px] text-foreground whitespace-nowrap">
+                  {v}
+                </code>
+                {param.deprecatedValues?.includes(v) && (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] px-1.5 py-0 h-4 border-amber-300 text-amber-600"
+                  >
+                    deprecated
+                  </Badge>
+                )}
+                <span className="text-muted-foreground">
+                  {param.enumDescriptions?.[v]}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {param.note && (
+        <div className="border-l-2 border-amber-400 pl-2 text-xs">
+          <p className="font-semibold text-amber-700 dark:text-amber-400">
+            {param.noteTitle ?? "Deprecation notice"}
+          </p>
+          <p className="text-muted-foreground">{param.note}</p>
         </div>
       )}
       {param.fields && param.fields.length > 0 && (
@@ -263,6 +310,9 @@ export function ApiEndpoint({
   path,
   title,
   description,
+  notes,
+  note,
+  noteTitle,
   pathParams,
   queryParams,
   requestBody,
@@ -298,6 +348,21 @@ export function ApiEndpoint({
           </code>
         </div>
         <p className="text-sm text-muted-foreground mt-3">{description}</p>
+        {notes && notes.length > 0 && (
+          <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground space-y-1">
+            {notes.map((n) => (
+              <li key={n}>{n}</li>
+            ))}
+          </ul>
+        )}
+        {note && (
+          <div className="mt-3 border-l-2 border-amber-400 pl-3 text-sm">
+            <p className="font-semibold text-amber-700 dark:text-amber-400">
+              {noteTitle ?? "Deprecation notice"}
+            </p>
+            <p className="text-muted-foreground">{note}</p>
+          </div>
+        )}
       </div>
 
       <ApiTryIt

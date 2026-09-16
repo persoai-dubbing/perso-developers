@@ -17,6 +17,7 @@ const DOCS_PATHS = [
   "/docs/feedback",
   "/docs/community-spotlight",
   "/docs/help",
+  "/docs/changelog",
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

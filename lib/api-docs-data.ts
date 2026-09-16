@@ -971,14 +971,18 @@ export const dubbingCategory: ApiCategory = {
                 type: "string",
                 required: false,
                 enum: ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"],
+                enumDescriptions: {
+                  AUDIO_ENGINE_V3: "Expressive. Supported by all languages (recommended).",
+                  ELEVEN_V2: "Natural.",
+                  ELEVEN_V3: "Emotional. Removed on 2026-09-29 — requests using it return 400 VT40918.",
+                },
+                deprecatedValues: ["ELEVEN_V3"],
+                note: "ELEVEN_V3 is retired on 2026-09-29. Migrate to AUDIO_ENGINE_V3.",
                 description:
-                  "TTS model to apply to this language. Optional even for DUBBING / LIPSYNC — " +
-                  "if omitted, the server applies a default model supported by the language. " +
-                  "The specific default is not documented, so specify `ttsModel` explicitly if you need deterministic behavior. " +
-                  "If specified, it must be one of the target language's supportedTtsModels " +
-                  "or the request fails with 400 VT4009 (UNSUPPORTED_LANGUAGE_TTS_MODEL_PAIR). " +
-                  "Check the Language API's supportedTtsModels for the target language before specifying. " +
-                  "Ignored for STT / AudioSeparation requests (may be omitted).",
+                  "TTS model for this language. If omitted, the server picks a default supported by the language; " +
+                  "specify it explicitly for deterministic behavior. " +
+                  "Must be in the language's supportedTtsModels (Language API), otherwise 400 VT4009. " +
+                  "Ignored for STT / AudioSeparation.",
               },
             ],
           },
@@ -1023,9 +1027,14 @@ export const dubbingCategory: ApiCategory = {
             description:
               "(Deprecated since 2026-05-14) Single TTS model applied to all target languages. " +
               "New integrations should specify `ttsModel` per language inside `targetLanguages`. " +
-              "AUDIO_ENGINE_V3 (all languages), ELEVEN_V2 (natural), or ELEVEN_V3 (emotional). " +
               "Each value must be in the target language's supportedTtsModels (see the Language API).",
             enum: ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"],
+            enumDescriptions: {
+              AUDIO_ENGINE_V3: "Expressive. Supported by all languages (recommended).",
+              ELEVEN_V2: "Natural.",
+              ELEVEN_V3: "Emotional. Removed on 2026-09-29 — requests using it return 400 VT40918.",
+            },
+            deprecatedValues: ["ELEVEN_V3"],
           },
           {
             name: "title",
@@ -1040,8 +1049,8 @@ export const dubbingCategory: ApiCategory = {
   "isVideoProject": true,
   "sourceLanguageCode": "en",
   "targetLanguages": [
-      { "languageCode": "ko", "ttsModel": "ELEVEN_V3" },
-      { "languageCode": "ja", "ttsModel": "ELEVEN_V3" }
+      { "languageCode": "ko", "ttsModel": "AUDIO_ENGINE_V3" },
+      { "languageCode": "ja", "ttsModel": "AUDIO_ENGINE_V3" }
   ],
   "numberOfSpeakers": 2,
   "withLipSync": false,
@@ -1079,6 +1088,11 @@ export const dubbingCategory: ApiCategory = {
           code: "VT4009",
           status: 400,
           description: "Target language and TTS model pair is not supported",
+        },
+        {
+          code: "VT40918",
+          status: 400,
+          description: "TTS model is retired (ELEVEN_V3, from 2026-09-29)",
         },
       ],
     },
@@ -1930,6 +1944,102 @@ export const editingCategory: ApiCategory = {
       ],
     },
     {
+      id: "bulk-change-speakers",
+      method: "POST",
+      path: "/video-translator/api/v1/projects/{projectSeq}/spaces/{spaceSeq}/speakers/bulk-change",
+      title: "Bulk Change Speakers",
+      description:
+        "Change the speaker of every script assigned to a source speaker to a target speaker in one call. " +
+        "The sourceSpeakerSeq/targetSpeakerSeq voice-id pair is always required. " +
+        "Send sourceProjectSpeakerSeq/targetProjectSpeakerSeq as well to identify the speakers by those values — " +
+        "a speaker that already has a voice-library voice applied can then still be selected. " +
+        "These two fields are required for Dubbing projects and recommended for all project version 2 projects. " +
+        "The changed sentences are saved as draft changes carrying the target speaker's voice and are marked for regeneration — " +
+        "regenerate the project afterwards to render the audio. " +
+        "Available for STT / Audio Separation / Dubbing projects. " +
+        "Obtain both values from the speakers[].projectSpeakerSeq field of the Get Script response. " +
+        "(STT / Audio Separation projects also keep the existing request format: the sourceSpeakerSeq/targetSpeakerSeq " +
+        "voice-id pair, plus targetProjectSpeakerSeq on project version 2.)",
+      pathParams: [
+        {
+          name: "projectSeq",
+          type: "integer",
+          required: true,
+          description: "The unique identifier of the project.",
+        },
+        {
+          name: "spaceSeq",
+          type: "integer",
+          required: true,
+          description: "The unique identifier of the space.",
+        },
+      ],
+      requestBody: {
+        fields: [
+          {
+            name: "sourceProjectSpeakerSeq",
+            type: "integer",
+            required: true,
+            description:
+              "projectSpeakerSeq of the speaker whose scripts are moved. Required for Dubbing, recommended elsewhere on project version 2. Use a speakers[].projectSpeakerSeq value from the Get Script response.",
+          },
+          {
+            name: "targetProjectSpeakerSeq",
+            type: "integer",
+            required: true,
+            description:
+              "projectSpeakerSeq of the speaker the scripts are changed to. Required for Dubbing, recommended elsewhere on project version 2. Use a speakers[].projectSpeakerSeq value from the Get Script response.",
+          },
+          {
+            name: "sourceSpeakerSeq",
+            type: "string",
+            required: true,
+            description:
+              "Voice id of the source speaker (always required). Not used for speaker identification when the projectSpeakerSeq pair is sent.",
+          },
+          {
+            name: "targetSpeakerSeq",
+            type: "string",
+            required: true,
+            description:
+              "Voice id of the target speaker (always required). Not used for speaker identification when the projectSpeakerSeq pair is sent.",
+          },
+        ],
+        example: `{
+  "sourceSpeakerSeq": "pvtv-3789224e24134dda077155264e8b1b64",
+  "targetSpeakerSeq": "pvtv-69aaeacedfb9defbffa828828b872a26",
+  "sourceProjectSpeakerSeq": 807,
+  "targetProjectSpeakerSeq": 808
+}`,
+      },
+      response: {
+        statusCode: 200,
+        example: `{
+  "result": null
+}`,
+      },
+      errors: [
+        {
+          code: "VT4001",
+          status: 400,
+          description:
+            "source and target speakers are the same, the projectSpeakerSeq pair is missing on a Dubbing project, or the pair was sent to a project version 1 project",
+        },
+        {
+          code: "VT4007",
+          status: 400,
+          description:
+            "Not an STT / Audio Separation / Dubbing project",
+        },
+        {
+          code: "VT40414",
+          status: 404,
+          description:
+            "source or target speaker is not an active speaker in the project",
+        },
+      ],
+    },
+    {
       id: "match-rewrite",
       method: "POST",
       path: "/video-translator/api/v1/project/{projectSeq}/audio-sentence/{audioSentenceSeq}/match-rewrite",
@@ -2435,7 +2545,15 @@ export const languageCategory: ApiCategory = {
       path: "/video-translator/api/v1/languages",
       title: "List Languages",
       description:
-        "Returns a list of all supported languages including their language codes, names, and the TTS models each language supports. This endpoint is the only way to check TTS model support — there is no dedicated model-lookup endpoint. `supportedTtsModels` lists the valid TTS models when the language is used as a translation target; use it to validate `ttsModel` before submitting a translation (an unsupported pair returns 400 VT4009). The same `code` can appear multiple times, distinguished by `languageTag` (e.g. English (US) has `languageTag: \"default\"` while English (UK) has `languageTag: \"en-GB\"`; likewise pt-PT, es-ES). `code: \"auto\"` (Auto Detect) is for `sourceLanguageCode` only — it has an empty `supportedTtsModels` and cannot be a target. Experimental languages are flagged via `experiment`.",
+        "Returns all supported languages with their codes, names, and the TTS models each language supports. " +
+        "This is the only endpoint for checking TTS model support — there is no dedicated model-lookup endpoint.",
+      notes: [
+        "supportedTtsModels: valid ttsModel values when the language is a translation target. Validate against it before submitting a translation — an unsupported pair returns 400 VT4009.",
+        "The same code can appear more than once, distinguished by languageTag (e.g. English (US) = \"default\", English (UK) = \"en-GB\"; likewise pt-PT, es-ES).",
+        "code \"auto\" (Auto Detect) is for sourceLanguageCode only — it has an empty supportedTtsModels and cannot be a target.",
+        "Experimental languages are flagged via experiment.",
+      ],
+      note: "ELEVEN_V3 is retired on 2026-09-29 and is no longer listed in supportedTtsModels from that date. Migrate to AUDIO_ENGINE_V3.",
       response: {
         statusCode: 200,
         example: `{
