@@ -974,10 +974,8 @@ export const dubbingCategory: ApiCategory = {
                 enumDescriptions: {
                   AUDIO_ENGINE_V3: "Expressive. Supported by all languages (recommended).",
                   ELEVEN_V2: "Natural.",
-                  ELEVEN_V3: "Emotional. Removed on 2026-09-29 — requests using it return 400 VT40918.",
+                  ELEVEN_V3: "Emotional.",
                 },
-                deprecatedValues: ["ELEVEN_V3"],
-                note: "ELEVEN_V3 is retired on 2026-09-29. Migrate to AUDIO_ENGINE_V3.",
                 description:
                   "TTS model for this language. If omitted, the server picks a default supported by the language; " +
                   "specify it explicitly for deterministic behavior. " +
@@ -1032,9 +1030,8 @@ export const dubbingCategory: ApiCategory = {
             enumDescriptions: {
               AUDIO_ENGINE_V3: "Expressive. Supported by all languages (recommended).",
               ELEVEN_V2: "Natural.",
-              ELEVEN_V3: "Emotional. Removed on 2026-09-29 — requests using it return 400 VT40918.",
+              ELEVEN_V3: "Emotional.",
             },
-            deprecatedValues: ["ELEVEN_V3"],
           },
           {
             name: "title",
@@ -1088,11 +1085,6 @@ export const dubbingCategory: ApiCategory = {
           code: "VT4009",
           status: 400,
           description: "Target language and TTS model pair is not supported",
-        },
-        {
-          code: "VT40918",
-          status: 400,
-          description: "TTS model is retired (ELEVEN_V3, from 2026-09-29)",
         },
       ],
     },
@@ -2553,7 +2545,6 @@ export const languageCategory: ApiCategory = {
         "code \"auto\" (Auto Detect) is for sourceLanguageCode only — it has an empty supportedTtsModels and cannot be a target.",
         "Experimental languages are flagged via experiment.",
       ],
-      note: "ELEVEN_V3 is retired on 2026-09-29 and is no longer listed in supportedTtsModels from that date. Migrate to AUDIO_ENGINE_V3.",
       response: {
         statusCode: 200,
         example: `{

@@ -17,14 +17,6 @@ export interface ChangelogEntry {
 /** Newest first. Keep one entry per change; UI and llms.txt derive from this list. */
 export const changelog: ChangelogEntry[] = [
   {
-    date: "2026-09-16",
-    kind: "Deprecated",
-    area: "Dubbing API",
-    summary: "ttsModel value ELEVEN_V3 (Emotional). Sunset on 2026-09-29.",
-    migration: "Use AUDIO_ENGINE_V3.",
-    href: "/docs/dubbing#translate",
-  },
-  {
     date: "2026-07-23",
     kind: "Added",
     area: "Editing API",
