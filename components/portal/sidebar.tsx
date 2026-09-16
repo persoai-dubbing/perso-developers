@@ -25,6 +25,7 @@ import {
   HelpCircle,
   AudioLines,
   AudioWaveform,
+  History,
 } from "lucide-react";
 
 const navigation = [
@@ -51,6 +52,7 @@ const persoApiSubNav = [
   { name: "Feedback", href: "/docs/feedback", icon: MessageSquare },
   { name: "Community Spotlight", href: "/docs/community-spotlight", icon: Star },
   { name: "Help", href: "/docs/help", icon: HelpCircle },
+  { name: "Changelog", href: "/docs/changelog", icon: History },
 ];
 
 interface SidebarProps {
