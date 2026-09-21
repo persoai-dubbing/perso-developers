@@ -18,7 +18,16 @@ export default function ChangelogPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Changelog</h1>
         <p className="text-muted-foreground text-lg">
-          API additions, deprecations and removals, newest first.
+          Changes that affect API integrations, newest first. See the{" "}
+          <a
+            href="https://github.com/persoai-dubbing/perso-developers/releases"
+            className="text-primary hover:underline"
+            target="_blank"
+            rel="noreferrer"
+          >
+            release history
+          </a>{" "}
+          for the full list of portal changes.
         </p>
       </div>
 
@@ -27,6 +36,9 @@ export default function ChangelogPage() {
           <div key={i} className="flex flex-col gap-2 px-6 py-4 sm:flex-row sm:gap-6">
             <div className="flex items-center gap-2 sm:w-40 sm:shrink-0 sm:flex-col sm:items-start">
               <code className="text-sm text-foreground">{entry.date}</code>
+              {entry.version && (
+                <span className="text-xs text-muted-foreground">v{entry.version}</span>
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
