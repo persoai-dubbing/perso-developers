@@ -5,7 +5,6 @@ import {
   type ApiGuide,
 } from "@/lib/api-docs-data";
 import type { ApiEndpointProps, Parameter } from "@/components/portal/api-endpoint";
-import { changelog } from "@/lib/changelog-data";
 
 function renderGuide(guide: ApiGuide): string {
   const lines: string[] = [];
@@ -230,12 +229,6 @@ export function generateLlmDocs(): string {
 
   lines.push("# Perso AI API Documentation");
   lines.push("");
-  if (changelog.length > 0) {
-    lines.push(
-      `Last updated: ${changelog[0].date}. Changelog: https://developers.perso.ai/docs/changelog`,
-    );
-    lines.push("");
-  }
   lines.push(`API Base URL: ${apiDocsConfig.apiBaseUrl}`);
   lines.push(`Service/File URL: ${apiDocsConfig.storageBaseUrl}`);
   lines.push(
