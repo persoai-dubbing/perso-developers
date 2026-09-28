@@ -970,17 +970,27 @@ export const dubbingCategory: ApiCategory = {
                 name: "ttsModel",
                 type: "string",
                 required: false,
-                enum: ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"],
+                enum: ["ORIOLE", "WREN", "DODO", "NIGHTINGALE"],
                 enumDescriptions: {
-                  AUDIO_ENGINE_V3: "Expressive. Supported by all languages (recommended).",
-                  ELEVEN_V2: "Natural.",
-                  ELEVEN_V3: "Emotional.",
+                  ORIOLE: "Expressive. Supported by all languages. Default when omitted (recommended).",
+                  WREN: "Natural.",
+                  DODO: "Emotional.",
+                  NIGHTINGALE: "End-to-end dubbing that clones the original voices. Priced differently (see Estimate Quota Usage) and does not support lip sync, SRT upload, RED speed, voice change or per-sentence regeneration (400 VT40918).",
                 },
+                note: "Former names are still accepted on input as deprecated aliases: AUDIO_ENGINE_V3 = ORIOLE, ELEVEN_V2 = WREN, ELEVEN_V3 = DODO. Responses always return the new names.",
+                noteTitle: "Renamed on 2026-09-29",
                 description:
-                  "TTS model for this language. If omitted, the server picks a default supported by the language; " +
-                  "specify it explicitly for deterministic behavior. " +
+                  "TTS model for this language. If omitted, ORIOLE is used. " +
                   "Must be in the language's supportedTtsModels (Language API), otherwise 400 VT4009. " +
                   "Ignored for STT / AudioSeparation.",
+              },
+              {
+                name: "cloningStrength",
+                type: "integer",
+                required: false,
+                default: "7",
+                description:
+                  "NIGHTINGALE only. How strongly the original voice is cloned, 1 to 10. Ignored for other TTS models.",
               },
             ],
           },
@@ -1003,7 +1013,7 @@ export const dubbingCategory: ApiCategory = {
             name: "withLipSync",
             type: "boolean",
             required: false,
-            description: "Whether to include lip sync processing.",
+            description: "Whether to include lip sync processing. Not supported with NIGHTINGALE (400 VT40918).",
           },
           {
             name: "customDictionaryBlobPath",
@@ -1015,7 +1025,7 @@ export const dubbingCategory: ApiCategory = {
             name: "srtBlobPath",
             type: "string",
             required: false,
-            description: "Storage path to an SRT subtitle file.",
+            description: "Storage path to an SRT subtitle file. Not supported with NIGHTINGALE (400 VT40918).",
           },
           {
             name: "ttsModel",
@@ -1026,12 +1036,15 @@ export const dubbingCategory: ApiCategory = {
               "(Deprecated since 2026-05-14) Single TTS model applied to all target languages. " +
               "New integrations should specify `ttsModel` per language inside `targetLanguages`. " +
               "Each value must be in the target language's supportedTtsModels (see the Language API).",
-            enum: ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"],
+            enum: ["ORIOLE", "WREN", "DODO", "NIGHTINGALE"],
             enumDescriptions: {
-              AUDIO_ENGINE_V3: "Expressive. Supported by all languages (recommended).",
-              ELEVEN_V2: "Natural.",
-              ELEVEN_V3: "Emotional.",
+              ORIOLE: "Expressive. Supported by all languages. Default when omitted (recommended).",
+              WREN: "Natural.",
+              DODO: "Emotional.",
+              NIGHTINGALE: "End-to-end dubbing that clones the original voices. Priced differently (see Estimate Quota Usage) and does not support lip sync, SRT upload, RED speed, voice change or per-sentence regeneration (400 VT40918).",
             },
+            note: "Former names are still accepted on input as deprecated aliases: AUDIO_ENGINE_V3 = ORIOLE, ELEVEN_V2 = WREN, ELEVEN_V3 = DODO. Responses always return the new names.",
+            noteTitle: "Renamed on 2026-09-29",
           },
           {
             name: "title",
@@ -1046,8 +1059,8 @@ export const dubbingCategory: ApiCategory = {
   "isVideoProject": true,
   "sourceLanguageCode": "en",
   "targetLanguages": [
-      { "languageCode": "ko", "ttsModel": "AUDIO_ENGINE_V3" },
-      { "languageCode": "ja", "ttsModel": "AUDIO_ENGINE_V3" }
+      { "languageCode": "ko", "ttsModel": "ORIOLE" },
+      { "languageCode": "ja", "ttsModel": "NIGHTINGALE", "cloningStrength": 7 }
   ],
   "numberOfSpeakers": 2,
   "withLipSync": false,
@@ -1086,6 +1099,16 @@ export const dubbingCategory: ApiCategory = {
           status: 400,
           description: "Target language and TTS model pair is not supported",
         },
+        {
+          code: "VT40918",
+          status: 400,
+          description: "The TTS model does not support this option (NIGHTINGALE with lip sync, SRT upload or RED speed)",
+        },
+        {
+          code: "VT40022",
+          status: 400,
+          description: "cloningStrength out of range (1 to 10)",
+        },
       ],
     },
     {
@@ -1094,7 +1117,7 @@ export const dubbingCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/{projectSeq}/spaces/{spaceSeq}",
       title: "Get Project",
       description:
-        "Retrieve detailed information about a specific translation project. The progressReason field indicates the current status: Enqueue Pending | Slow Mode Pending | Uploading | Transcribing | Translating | Generating Voice | Analyzing Lip Sync | Applying Lip Sync | Completed | Failed.",
+        "Retrieve detailed information about a specific translation project. ttsModel is the project's TTS model (ORIOLE, WREN, DODO, NIGHTINGALE; null for STT / audio separation projects). The progressReason field indicates the current status: Enqueue Pending | Slow Mode Pending | Uploading | Transcribing | Translating | Generating Voice | Analyzing Lip Sync | Applying Lip Sync | Completed | Failed.",
       pathParams: [
         {
           name: "projectSeq",
@@ -1126,6 +1149,7 @@ export const dubbingCategory: ApiCategory = {
     "code": "ko",
     "name": "Korean"
   },
+  "ttsModel": "ORIOLE",
   "progress": 100,
   "progressReason": "Completed",
   "hasFailed": false,
@@ -1692,7 +1716,7 @@ export const editingCategory: ApiCategory = {
       method: "PATCH",
       path: "/video-translator/api/v1/project/{projectSeq}/audio-sentence/{audioSentenceSeq}/generate-audio",
       title: "Generate Audio",
-      description: "Generate a translated audio file for a specific sentence.",
+      description: "Generate a translated audio file for a specific sentence. Not available for NIGHTINGALE projects (400 VT40918) — use Request Proofread to re-render.",
       pathParams: [
         {
           name: "projectSeq",
@@ -1807,7 +1831,8 @@ export const editingCategory: ApiCategory = {
       path: "/video-translator/api/v1/project/{projectSeq}/audio-sentence/{audioSentenceSeq}/temp-save",
       title: "Temp Save Draft",
       description:
-        "Temporarily save a translation draft for a paragraph without triggering full processing.",
+        "Temporarily save a translation draft for a paragraph without triggering full processing. " +
+        "On NIGHTINGALE projects, changing the original text clears that sentence's translation until the next proofread re-translates it.",
       pathParams: [
         {
           name: "projectSeq",
@@ -1849,6 +1874,18 @@ export const editingCategory: ApiCategory = {
   "result": null
 }`,
       },
+      errors: [
+        {
+          code: "VT40026",
+          status: 400,
+          description: "NIGHTINGALE project: the speaker change makes this sentence overlap another sentence of the same speaker",
+        },
+        {
+          code: "VT40027",
+          status: 400,
+          description: "NIGHTINGALE project: original text is empty",
+        },
+      ],
     },
     {
       id: "add-speaker-from-sentence",
@@ -2091,7 +2128,8 @@ export const editingCategory: ApiCategory = {
       path: "/video-translator/api/v1/project/{projectSeq}/space/{spaceSeq}/proofread",
       title: "Request Proofread",
       description:
-        "Submit a proofread request for the project's translations. This re-processes all translations with quality improvements.",
+        "Submit a proofread request for the project's translations. This re-processes all translations with quality improvements. " +
+        "For NIGHTINGALE projects the first proofread is free and each later one costs the same as the initial dubbing (see Estimate Quota Usage with projectSeq); RED speed is not supported (400 VT40918).",
       pathParams: [
         {
           name: "projectSeq",
@@ -2305,7 +2343,16 @@ export const usageCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/spaces/{spaceSeq}/media/quota",
       title: "Estimate Quota Usage",
       description:
-        "Calculate the estimated quota that will be consumed for a given media file based on its type, duration, and translation settings. Quota is measured in seconds of media (a 9-second clip costs 9); enabling lipSync doubles it (a 9-second clip costs 18). width and height are required for both video and audio requests — omitting them returns a 500.",
+        "Calculate the credits that will be consumed for a given media file based on its type, duration, translation type and TTS models. " +
+        "Credits = whole seconds of media × rate per second × number of target languages.",
+      notes: [
+        "Rate per second: dubbing (ORIOLE / WREN / DODO) 1, dubbing + lip sync 2, NIGHTINGALE 6, STT 0.2, audio separation 0.5.",
+        "Video at 4K (3840×2160) or above costs 3× for dubbing and lip sync. NIGHTINGALE, STT and audio separation are not affected by resolution.",
+        "Send ttsModelCounts to price a mix of models per language (e.g. NIGHTINGALE:1,ORIOLE:2); targetLanguageSize is then ignored.",
+        "NIGHTINGALE proofread: the first proofread after the initial export is free; each later proofread costs the same as the initial dubbing. Send projectSeq to get the proofread price and exportCount.",
+        "expectedUsedQuota is the list price. promotionExpectedUsedQuota is the discounted price that will actually be deducted; it equals expectedUsedQuota when no discount applies.",
+        "width and height are required for video — omitting them returns 400 VT4001. Not needed for audio.",
+      ],
       pathParams: [
         {
           name: "spaceSeq",
@@ -2323,10 +2370,19 @@ export const usageCategory: ApiCategory = {
           enum: ["video", "audio"],
         },
         {
+          name: "translateType",
+          type: "string",
+          required: false,
+          enum: ["TRANSLATE", "TRANSLATE_WITH_LIPSYNC", "LIPSYNC", "STT", "AUDIO_SEPARATION"],
+          description:
+            "What will be requested. TRANSLATE = dubbing, TRANSLATE_WITH_LIPSYNC = dubbing + lip sync, LIPSYNC = lip sync only. When set, lipSync is ignored.",
+        },
+        {
           name: "lipSync",
           type: "boolean",
-          required: true,
-          description: "Whether lip sync is included.",
+          required: false,
+          deprecated: true,
+          description: "Whether lip sync is included. Use translateType instead.",
         },
         {
           name: "durationMs",
@@ -2337,32 +2393,59 @@ export const usageCategory: ApiCategory = {
         {
           name: "width",
           type: "integer",
-          required: true,
-          description: "Video width in pixels.",
+          required: false,
+          description: "Video width in pixels. Required when mediaType is video (400 VT4001 if missing).",
         },
         {
           name: "height",
           type: "integer",
-          required: true,
-          description: "Video height in pixels.",
+          required: false,
+          description: "Video height in pixels. Required when mediaType is video (400 VT4001 if missing).",
         },
         {
           name: "targetLanguageSize",
           type: "integer",
           required: false,
-          description: "Number of target languages.",
+          description: "Number of target languages. Ignored when ttsModelCounts is sent.",
           default: "1",
+        },
+        {
+          name: "ttsModelCounts",
+          type: "string",
+          required: false,
+          description:
+            "Number of target languages per TTS model as MODEL:count pairs separated by commas, e.g. NIGHTINGALE:1,ORIOLE:2. Use this whenever target languages use different models.",
+        },
+        {
+          name: "projectSeq",
+          type: "integer",
+          required: false,
+          description:
+            "Existing project to price a proofread for. The response then contains the proofread price and exportCount (initial export = 1, +1 per completed proofread; counted for NIGHTINGALE only).",
         },
       ],
       response: {
         statusCode: 200,
         example: `{
   "result": {
-    "expectedUsedQuota": 10.0,
-    "promotionExpectedUsedQuota": 10.0
+    "expectedUsedQuota": 720.0,
+    "promotionExpectedUsedQuota": 540.0,
+    "exportCount": null
   }
 }`,
       },
+      errors: [
+        {
+          code: "VT4001",
+          status: 400,
+          description: "Invalid parameter (missing width/height for video, malformed ttsModelCounts, unknown model or count below 1)",
+        },
+        {
+          code: "VT40918",
+          status: 400,
+          description: "NIGHTINGALE cannot be combined with lip sync",
+        },
+      ],
     },
     {
       id: "get-user-queue",
@@ -2540,11 +2623,13 @@ export const languageCategory: ApiCategory = {
         "Returns all supported languages with their codes, names, and the TTS models each language supports. " +
         "This is the only endpoint for checking TTS model support — there is no dedicated model-lookup endpoint.",
       notes: [
-        "supportedTtsModels: valid ttsModel values when the language is a translation target. Validate against it before submitting a translation — an unsupported pair returns 400 VT4009.",
+        "supportedTtsModels: valid ttsModel values when the language is a translation target — ORIOLE, WREN, DODO, NIGHTINGALE. Validate against it before submitting a translation — an unsupported pair returns 400 VT4009. The array is unordered.",
         "The same code can appear more than once, distinguished by languageTag (e.g. English (US) = \"default\", English (UK) = \"en-GB\"; likewise pt-PT, es-ES).",
         "code \"auto\" (Auto Detect) is for sourceLanguageCode only — it has an empty supportedTtsModels and cannot be a target.",
         "Experimental languages are flagged via experiment.",
       ],
+      note: "supportedTtsModels now returns ORIOLE, WREN, DODO and NIGHTINGALE. The former names AUDIO_ENGINE_V3, ELEVEN_V2 and ELEVEN_V3 no longer appear in responses (AUDIO_ENGINE_V3 = ORIOLE, ELEVEN_V2 = WREN, ELEVEN_V3 = DODO); requests still accept them. Update any code that compares against the old names.",
+      noteTitle: "Renamed on 2026-09-29",
       response: {
         statusCode: 200,
         example: `{
@@ -2561,21 +2646,21 @@ export const languageCategory: ApiCategory = {
       "name": "English (US)",
       "languageTag": "default",
       "experiment": false,
-      "supportedTtsModels": ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"]
+      "supportedTtsModels": ["ORIOLE", "WREN", "DODO", "NIGHTINGALE"]
     },
     {
       "code": "en",
       "name": "English (UK)",
       "languageTag": "en-GB",
       "experiment": false,
-      "supportedTtsModels": ["AUDIO_ENGINE_V3", "ELEVEN_V3"]
+      "supportedTtsModels": ["ORIOLE", "NIGHTINGALE"]
     },
     {
       "code": "ja",
       "name": "Japanese",
       "languageTag": "default",
       "experiment": false,
-      "supportedTtsModels": ["AUDIO_ENGINE_V3", "ELEVEN_V3"]
+      "supportedTtsModels": ["ORIOLE", "DODO", "NIGHTINGALE"]
     }
   ]
 }`,
@@ -2767,15 +2852,16 @@ export const communitySpotlightCategory: ApiCategory = {
     "name": "English (US)",
     "languageTag": "default",
     "experiment": false,
-    "supportedTtsModels": ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"]
+    "supportedTtsModels": ["ORIOLE", "WREN", "DODO", "NIGHTINGALE"]
   },
   "targetLanguage": {
     "code": "ko",
     "name": "Korean",
     "languageTag": "default",
     "experiment": false,
-    "supportedTtsModels": ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"]
+    "supportedTtsModels": ["ORIOLE", "WREN", "DODO", "NIGHTINGALE"]
   },
+  "ttsModel": "ORIOLE",
   "originalFileUrl": "/original.mp4",
   "translatedFileUrl": "/translated.mp4",
   "lipSyncFileUrl": "/lip-sync.mp4",
@@ -2821,15 +2907,16 @@ export const communitySpotlightCategory: ApiCategory = {
     "name": "English (US)",
     "languageTag": "default",
     "experiment": false,
-    "supportedTtsModels": ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"]
+    "supportedTtsModels": ["ORIOLE", "WREN", "DODO", "NIGHTINGALE"]
   },
   "targetLanguage": {
     "code": "ko",
     "name": "Korean",
     "languageTag": "default",
     "experiment": false,
-    "supportedTtsModels": ["AUDIO_ENGINE_V3", "ELEVEN_V2", "ELEVEN_V3"]
+    "supportedTtsModels": ["ORIOLE", "WREN", "DODO", "NIGHTINGALE"]
   },
+  "ttsModel": "ORIOLE",
   "originalFileUrl": "/original.mp4",
   "translatedFileUrl": "/translated.mp4",
   "isLipSync": true

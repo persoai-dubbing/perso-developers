@@ -110,7 +110,7 @@ curl -X POST "https://api.perso.ai/video-translator/api/v1/projects/spaces/{spac
            "mediaSeq": 12345,
            "isVideoProject": true,
            "sourceLanguageCode": "en",
-           "targetLanguages": [{"languageCode": "ko", "ttsModel": "AUDIO_ENGINE_V3"}],
+           "targetLanguages": [{"languageCode": "ko", "ttsModel": "ORIOLE"}],
            "preferredSpeedType": "GREEN"
          }'
 # 응답: 200 { "result": { "startGenerateProjectIdList": [101] } }
