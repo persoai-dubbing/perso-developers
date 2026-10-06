@@ -970,17 +970,19 @@ export const dubbingCategory: ApiCategory = {
                 name: "ttsModel",
                 type: "string",
                 required: false,
-                enum: ["ORIOLE", "WREN", "DODO", "NIGHTINGALE"],
+                enum: ["ORIOLE", "WREN", "LINNET_3", "LINNET_4", "FINCH", "NIGHTINGALE"],
                 enumDescriptions: {
-                  ORIOLE: "Expressive. Supported by all languages. Default when omitted (recommended).",
-                  WREN: "Natural.",
-                  DODO: "Emotional.",
-                  NIGHTINGALE: "End-to-end dubbing that clones the original voices. Priced differently (see Estimate Quota Usage) and does not support lip sync, SRT upload, RED speed, voice change or per-sentence regeneration (400 VT40918).",
+                  ORIOLE: "Natural local pronunciation. Default where LINNET_4 is unavailable.",
+                  WREN: "Rich intonation.",
+                  LINNET_3: "Keeps the original manner of speech.",
+                  LINNET_4: "Balanced delivery that follows the context. Default when omitted.",
+                  FINCH: "Simplified basic dubbing (0.2 credits per second). Pro plan and above (403 VT40314 otherwise).",
+                  NIGHTINGALE: "Multi-dimensional emotional expression. Pro plan and above, priced separately; no lip sync, SRT, RED speed, voice change or per-sentence regeneration (400 VT40918).",
                 },
-                note: "Former names are still accepted on input as deprecated aliases: AUDIO_ENGINE_V3 = ORIOLE, ELEVEN_V2 = WREN, ELEVEN_V3 = DODO. Responses always return the new names.",
-                noteTitle: "Renamed on 2026-09-29",
+                note: "Former names are still accepted on input as deprecated aliases: AUDIO_ENGINE_V3 = ORIOLE, ELEVEN_V2 = WREN, ELEVEN_V3 = DODO = LINNET_3. Responses always return the new names.",
+                noteTitle: "Renamed (DODO → LINNET_3 on 2026-10-12)",
                 description:
-                  "TTS model for this language. If omitted, ORIOLE is used. " +
+                  "TTS model for this language. If omitted, LINNET_4 is used, or ORIOLE when the language does not support LINNET_4. " +
                   "Must be in the language's supportedTtsModels (Language API), otherwise 400 VT4009. " +
                   "Ignored for STT / AudioSeparation.",
               },
@@ -1036,15 +1038,17 @@ export const dubbingCategory: ApiCategory = {
               "(Deprecated since 2026-05-14) Single TTS model applied to all target languages. " +
               "New integrations should specify `ttsModel` per language inside `targetLanguages`. " +
               "Each value must be in the target language's supportedTtsModels (see the Language API).",
-            enum: ["ORIOLE", "WREN", "DODO", "NIGHTINGALE"],
+            enum: ["ORIOLE", "WREN", "LINNET_3", "LINNET_4", "FINCH", "NIGHTINGALE"],
             enumDescriptions: {
-              ORIOLE: "Expressive. Supported by all languages. Default when omitted (recommended).",
-              WREN: "Natural.",
-              DODO: "Emotional.",
-              NIGHTINGALE: "End-to-end dubbing that clones the original voices. Priced differently (see Estimate Quota Usage) and does not support lip sync, SRT upload, RED speed, voice change or per-sentence regeneration (400 VT40918).",
+              ORIOLE: "Natural local pronunciation. Default where LINNET_4 is unavailable.",
+              WREN: "Rich intonation.",
+              LINNET_3: "Keeps the original manner of speech.",
+              LINNET_4: "Balanced delivery that follows the context. Default when omitted.",
+              FINCH: "Simplified basic dubbing (0.2 credits per second). Pro plan and above (403 VT40314 otherwise).",
+              NIGHTINGALE: "Multi-dimensional emotional expression. Pro plan and above, priced separately; no lip sync, SRT, RED speed, voice change or per-sentence regeneration (400 VT40918).",
             },
-            note: "Former names are still accepted on input as deprecated aliases: AUDIO_ENGINE_V3 = ORIOLE, ELEVEN_V2 = WREN, ELEVEN_V3 = DODO. Responses always return the new names.",
-            noteTitle: "Renamed on 2026-09-29",
+            note: "Former names are still accepted on input as deprecated aliases: AUDIO_ENGINE_V3 = ORIOLE, ELEVEN_V2 = WREN, ELEVEN_V3 = DODO = LINNET_3. Responses always return the new names.",
+            noteTitle: "Renamed (DODO → LINNET_3 on 2026-10-12)",
           },
           {
             name: "title",
@@ -1059,7 +1063,7 @@ export const dubbingCategory: ApiCategory = {
   "isVideoProject": true,
   "sourceLanguageCode": "en",
   "targetLanguages": [
-      { "languageCode": "ko", "ttsModel": "ORIOLE" },
+      { "languageCode": "ko", "ttsModel": "LINNET_4" },
       { "languageCode": "ja", "ttsModel": "NIGHTINGALE", "cloningStrength": 7 }
   ],
   "numberOfSpeakers": 2,
@@ -1105,6 +1109,11 @@ export const dubbingCategory: ApiCategory = {
           description: "The TTS model does not support this option (NIGHTINGALE with lip sync, SRT upload or RED speed)",
         },
         {
+          code: "VT40314",
+          status: 403,
+          description: "The TTS model is not available on the plan (FINCH and NIGHTINGALE require Pro or above)",
+        },
+        {
           code: "VT40022",
           status: 400,
           description: "cloningStrength out of range (1 to 10)",
@@ -1117,7 +1126,7 @@ export const dubbingCategory: ApiCategory = {
       path: "/video-translator/api/v1/projects/{projectSeq}/spaces/{spaceSeq}",
       title: "Get Project",
       description:
-        "Retrieve detailed information about a specific translation project. ttsModel is the project's TTS model (ORIOLE, WREN, DODO, NIGHTINGALE; null for STT / audio separation projects). The progressReason field indicates the current status: Enqueue Pending | Slow Mode Pending | Uploading | Transcribing | Translating | Generating Voice | Analyzing Lip Sync | Applying Lip Sync | Completed | Failed.",
+        "Retrieve detailed information about a specific translation project. ttsModel is the project's TTS model (ORIOLE, WREN, LINNET_3, LINNET_4, FINCH, NIGHTINGALE; null for STT / audio separation projects). The progressReason field indicates the current status: Enqueue Pending | Slow Mode Pending | Uploading | Transcribing | Translating | Generating Voice | Analyzing Lip Sync | Applying Lip Sync | Completed | Failed.",
       pathParams: [
         {
           name: "projectSeq",
@@ -1149,7 +1158,7 @@ export const dubbingCategory: ApiCategory = {
     "code": "ko",
     "name": "Korean"
   },
-  "ttsModel": "ORIOLE",
+  "ttsModel": "LINNET_4",
   "progress": 100,
   "progressReason": "Completed",
   "hasFailed": false,
@@ -2346,9 +2355,9 @@ export const usageCategory: ApiCategory = {
         "Calculate the credits that will be consumed for a given media file based on its type, duration, translation type and TTS models. " +
         "Credits = whole seconds of media × rate per second × number of target languages.",
       notes: [
-        "Rate per second: dubbing (ORIOLE / WREN / DODO) 1, dubbing + lip sync 2, NIGHTINGALE 6, STT 0.2, audio separation 0.5.",
-        "Video at 4K (3840×2160) or above costs 3× for dubbing and lip sync. NIGHTINGALE, STT and audio separation are not affected by resolution.",
-        "Send ttsModelCounts to price a mix of models per language (e.g. NIGHTINGALE:1,ORIOLE:2); targetLanguageSize is then ignored.",
+        "Rate per second: dubbing (ORIOLE / WREN / LINNET_3 / LINNET_4) 1, FINCH 0.2, dubbing + lip sync 2, NIGHTINGALE 6, STT 0.2, audio separation 0.5.",
+        "Video at 4K (3840×2160) or above costs 3× for dubbing (FINCH included) and lip sync. NIGHTINGALE, STT and audio separation are not affected by resolution.",
+        "Send ttsModelCounts to price a mix of models per language (e.g. NIGHTINGALE:1,ORIOLE:2,FINCH:1); targetLanguageSize is then ignored.",
         "NIGHTINGALE proofread: the first proofread after the initial export is free; each later proofread costs the same as the initial dubbing. Send projectSeq to get the proofread price and exportCount.",
         "expectedUsedQuota is the list price. promotionExpectedUsedQuota is the discounted price that will actually be deducted; it equals expectedUsedQuota when no discount applies.",
         "width and height are required for video — omitting them returns 400 VT4001. Not needed for audio.",
@@ -2414,7 +2423,7 @@ export const usageCategory: ApiCategory = {
           type: "string",
           required: false,
           description:
-            "Number of target languages per TTS model as MODEL:count pairs separated by commas, e.g. NIGHTINGALE:1,ORIOLE:2. Use this whenever target languages use different models.",
+            "Number of target languages per TTS model as MODEL:count pairs separated by commas, e.g. NIGHTINGALE:1,ORIOLE:2,FINCH:1. Use this whenever target languages use different models.",
         },
         {
           name: "projectSeq",
@@ -2623,13 +2632,13 @@ export const languageCategory: ApiCategory = {
         "Returns all supported languages with their codes, names, and the TTS models each language supports. " +
         "This is the only endpoint for checking TTS model support — there is no dedicated model-lookup endpoint.",
       notes: [
-        "supportedTtsModels: valid ttsModel values when the language is a translation target — ORIOLE, WREN, DODO, NIGHTINGALE. Validate against it before submitting a translation — an unsupported pair returns 400 VT4009. The array is unordered.",
+        "supportedTtsModels: valid ttsModel values when the language is a translation target — ORIOLE, WREN, LINNET_3, LINNET_4, FINCH, NIGHTINGALE. Validate against it before submitting a translation — an unsupported pair returns 400 VT4009. The array is unordered.",
         "The same code can appear more than once, distinguished by languageTag (e.g. English (US) = \"default\", English (UK) = \"en-GB\"; likewise pt-PT, es-ES).",
         "code \"auto\" (Auto Detect) is for sourceLanguageCode only — it has an empty supportedTtsModels and cannot be a target.",
         "Experimental languages are flagged via experiment.",
       ],
-      note: "supportedTtsModels now returns ORIOLE, WREN, DODO and NIGHTINGALE. The former names AUDIO_ENGINE_V3, ELEVEN_V2 and ELEVEN_V3 no longer appear in responses (AUDIO_ENGINE_V3 = ORIOLE, ELEVEN_V2 = WREN, ELEVEN_V3 = DODO); requests still accept them. Update any code that compares against the old names.",
-      noteTitle: "Renamed on 2026-09-29",
+      note: "supportedTtsModels returns ORIOLE, WREN, LINNET_3, LINNET_4, FINCH and NIGHTINGALE. DODO was renamed to LINNET_3 on 2026-10-12; the former names AUDIO_ENGINE_V3, ELEVEN_V2, ELEVEN_V3 and DODO no longer appear in responses (AUDIO_ENGINE_V3 = ORIOLE, ELEVEN_V2 = WREN, ELEVEN_V3 = DODO = LINNET_3); requests still accept them. Update any code that compares against the old names.",
+      noteTitle: "Renamed (DODO → LINNET_3 on 2026-10-12)",
       response: {
         statusCode: 200,
         example: `{
@@ -2646,7 +2655,7 @@ export const languageCategory: ApiCategory = {
       "name": "English (US)",
       "languageTag": "default",
       "experiment": false,
-      "supportedTtsModels": ["ORIOLE", "WREN", "DODO", "NIGHTINGALE"]
+      "supportedTtsModels": ["ORIOLE", "WREN", "LINNET_3", "LINNET_4", "FINCH", "NIGHTINGALE"]
     },
     {
       "code": "en",
@@ -2660,7 +2669,7 @@ export const languageCategory: ApiCategory = {
       "name": "Japanese",
       "languageTag": "default",
       "experiment": false,
-      "supportedTtsModels": ["ORIOLE", "DODO", "NIGHTINGALE"]
+      "supportedTtsModels": ["ORIOLE", "LINNET_3", "LINNET_4", "FINCH", "NIGHTINGALE"]
     }
   ]
 }`,
@@ -2852,16 +2861,16 @@ export const communitySpotlightCategory: ApiCategory = {
     "name": "English (US)",
     "languageTag": "default",
     "experiment": false,
-    "supportedTtsModels": ["ORIOLE", "WREN", "DODO", "NIGHTINGALE"]
+    "supportedTtsModels": ["ORIOLE", "WREN", "LINNET_3", "LINNET_4", "FINCH", "NIGHTINGALE"]
   },
   "targetLanguage": {
     "code": "ko",
     "name": "Korean",
     "languageTag": "default",
     "experiment": false,
-    "supportedTtsModels": ["ORIOLE", "WREN", "DODO", "NIGHTINGALE"]
+    "supportedTtsModels": ["ORIOLE", "WREN", "LINNET_3", "LINNET_4", "FINCH", "NIGHTINGALE"]
   },
-  "ttsModel": "ORIOLE",
+  "ttsModel": "LINNET_4",
   "originalFileUrl": "/original.mp4",
   "translatedFileUrl": "/translated.mp4",
   "lipSyncFileUrl": "/lip-sync.mp4",
@@ -2907,16 +2916,16 @@ export const communitySpotlightCategory: ApiCategory = {
     "name": "English (US)",
     "languageTag": "default",
     "experiment": false,
-    "supportedTtsModels": ["ORIOLE", "WREN", "DODO", "NIGHTINGALE"]
+    "supportedTtsModels": ["ORIOLE", "WREN", "LINNET_3", "LINNET_4", "FINCH", "NIGHTINGALE"]
   },
   "targetLanguage": {
     "code": "ko",
     "name": "Korean",
     "languageTag": "default",
     "experiment": false,
-    "supportedTtsModels": ["ORIOLE", "WREN", "DODO", "NIGHTINGALE"]
+    "supportedTtsModels": ["ORIOLE", "WREN", "LINNET_3", "LINNET_4", "FINCH", "NIGHTINGALE"]
   },
-  "ttsModel": "ORIOLE",
+  "ttsModel": "LINNET_4",
   "originalFileUrl": "/original.mp4",
   "translatedFileUrl": "/translated.mp4",
   "isLipSync": true
