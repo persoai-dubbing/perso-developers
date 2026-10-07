@@ -979,8 +979,6 @@ export const dubbingCategory: ApiCategory = {
                   FINCH: "Simplified basic dubbing (0.2 credits per second). Pro plan and above (403 VT40314 otherwise).",
                   NIGHTINGALE: "Multi-dimensional emotional expression. Pro plan and above, priced separately; no lip sync, SRT, RED speed, voice change or per-sentence regeneration (400 VT40918).",
                 },
-                note: "Former names are still accepted on input as deprecated aliases: AUDIO_ENGINE_V3 = ORIOLE, ELEVEN_V2 = WREN, ELEVEN_V3 = DODO = LINNET_3. Responses always return the new names.",
-                noteTitle: "Renamed (DODO → LINNET_3 on 2026-10-12)",
                 description:
                   "TTS model for this language. If omitted, LINNET_4 is used, or ORIOLE when the language does not support LINNET_4. " +
                   "Must be in the language's supportedTtsModels (Language API), otherwise 400 VT4009. " +
@@ -1047,8 +1045,6 @@ export const dubbingCategory: ApiCategory = {
               FINCH: "Simplified basic dubbing (0.2 credits per second). Pro plan and above (403 VT40314 otherwise).",
               NIGHTINGALE: "Multi-dimensional emotional expression. Pro plan and above, priced separately; no lip sync, SRT, RED speed, voice change or per-sentence regeneration (400 VT40918).",
             },
-            note: "Former names are still accepted on input as deprecated aliases: AUDIO_ENGINE_V3 = ORIOLE, ELEVEN_V2 = WREN, ELEVEN_V3 = DODO = LINNET_3. Responses always return the new names.",
-            noteTitle: "Renamed (DODO → LINNET_3 on 2026-10-12)",
           },
           {
             name: "title",
@@ -2637,8 +2633,6 @@ export const languageCategory: ApiCategory = {
         "code \"auto\" (Auto Detect) is for sourceLanguageCode only — it has an empty supportedTtsModels and cannot be a target.",
         "Experimental languages are flagged via experiment.",
       ],
-      note: "supportedTtsModels returns ORIOLE, WREN, LINNET_3, LINNET_4, FINCH and NIGHTINGALE. DODO was renamed to LINNET_3 on 2026-10-12; the former names AUDIO_ENGINE_V3, ELEVEN_V2, ELEVEN_V3 and DODO no longer appear in responses (AUDIO_ENGINE_V3 = ORIOLE, ELEVEN_V2 = WREN, ELEVEN_V3 = DODO = LINNET_3); requests still accept them. Update any code that compares against the old names.",
-      noteTitle: "Renamed (DODO → LINNET_3 on 2026-10-12)",
       response: {
         statusCode: 200,
         example: `{
