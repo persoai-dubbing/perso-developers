@@ -23,7 +23,26 @@ export interface ChangelogEntry {
  */
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-10-12",
+    version: "1.0.17",
+    kind: "Added",
+    area: "Dubbing API",
+    summary: "New TTS models LINNET_4 (1 credit per second) and FINCH (0.2 credits per second, resolution multiplier applies; Pro plan and above, otherwise 403 VT40314). Supported languages are listed per language in supportedTtsModels. LINNET_4 is now the default when ttsModel is omitted (previously ORIOLE); languages that do not support LINNET_4 still default to ORIOLE.",
+    migration: "Send ttsModel explicitly if you rely on ORIOLE; omitted ttsModel now resolves to LINNET_4 where the language supports it.",
+    href: "/docs/dubbing#translate",
+  },
+  {
+    date: "2026-10-12",
+    version: "1.0.17",
+    kind: "Changed",
+    area: "Dubbing API",
+    summary: "TTS model DODO renamed to LINNET_3. Responses (supportedTtsModels, project ttsModel) return LINNET_3; requests still accept DODO and ELEVEN_V3 as deprecated aliases.",
+    migration: "Compare against LINNET_3 when reading responses. Send LINNET_3 in requests.",
+    href: "/docs/dubbing#translate",
+  },
+  {
     date: "2026-09-29",
+    version: "1.0.16",
     kind: "Changed",
     area: "Dubbing API",
     summary: "TTS models renamed: AUDIO_ENGINE_V3 → ORIOLE, ELEVEN_V2 → WREN, ELEVEN_V3 → DODO. Responses (supportedTtsModels, project ttsModel) return the new names; requests still accept the old names.",
@@ -32,6 +51,7 @@ export const changelog: ChangelogEntry[] = [
   },
   {
     date: "2026-09-29",
+    version: "1.0.16",
     kind: "Added",
     area: "Dubbing API",
     summary: "NIGHTINGALE TTS model (end-to-end dubbing with cloned voices, 6 credits per second) with targetLanguages[].cloningStrength. Estimate Quota Usage gains translateType, ttsModelCounts, projectSeq and exportCount.",
