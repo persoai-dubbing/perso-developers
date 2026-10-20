@@ -23,6 +23,14 @@ export interface ChangelogEntry {
  */
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-10-22",
+    version: "1.0.18",
+    kind: "Added",
+    area: "File API",
+    summary: "Upload Video, Upload Audio, Validate Media, Get External Metadata and Upload External Video accept sttMode (boolean, default false). With sttMode true, paid plans can upload media up to 2 hours for STT projects.",
+    href: "/docs/file#upload-video",
+  },
+  {
     date: "2026-10-12",
     version: "1.0.17",
     kind: "Added",
