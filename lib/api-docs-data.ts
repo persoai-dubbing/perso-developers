@@ -280,11 +280,19 @@ export const fileCategory: ApiCategory = {
             description:
               "File name. URL-encoded names are automatically decoded.",
           },
+          {
+            name: "sttMode",
+            type: "boolean",
+            required: false,
+            description:
+              "Set to true when the file will be used for an STT project. On paid plans this raises the duration limit to 2 hours. Defaults to false.",
+          },
         ],
         example: `{
   "spaceSeq": 1,
   "fileUrl": "https://example.com/video.mp4",
-  "fileName": "my_video.mp4"
+  "fileName": "my_video.mp4",
+  "sttMode": false
 }`,
       },
       response: {
@@ -295,8 +303,7 @@ export const fileCategory: ApiCategory = {
   "videoFilePath": "/container/directory/uuid_20260219.mp4",
   "thumbnailFilePath": "/container/directory/uuid_20260219.webp",
   "size": 52428800,
-  "durationMs": 30000,
-  "fastMode": false
+  "durationMs": 30000
 }`,
       },
       errors: [
@@ -343,11 +350,19 @@ export const fileCategory: ApiCategory = {
             description:
               "File name. URL-encoded names are automatically decoded.",
           },
+          {
+            name: "sttMode",
+            type: "boolean",
+            required: false,
+            description:
+              "Set to true when the file will be used for an STT project. On paid plans this raises the duration limit to 2 hours. Defaults to false.",
+          },
         ],
         example: `{
   "spaceSeq": 1,
   "fileUrl": "https://portal-media.perso.ai/perso-storage/...",
-  "fileName": "my_audio.mp3"
+  "fileName": "my_audio.mp3",
+  "sttMode": false
 }`,
       },
       response: {
@@ -358,8 +373,7 @@ export const fileCategory: ApiCategory = {
   "audioFilePath": "/container/directory/uuid_20260219.mp3",
   "thumbnailFilePath": "audio_thumb.png",
   "size": 5242880,
-  "durationMs": 180000,
-  "fastMode": false
+  "durationMs": 180000
 }`,
       },
       errors: [
@@ -387,7 +401,7 @@ export const fileCategory: ApiCategory = {
       requestBody: {
         fields: [
           {
-            name: "space_seq",
+            name: "spaceSeq",
             type: "integer",
             required: true,
             description: "The unique identifier of the space.",
@@ -405,11 +419,19 @@ export const fileCategory: ApiCategory = {
             description: "Language code.",
             default: "en",
           },
+          {
+            name: "sttMode",
+            type: "boolean",
+            required: false,
+            description:
+              "Set to true when the file will be used for an STT project. On paid plans this raises the duration limit to 2 hours. Defaults to false.",
+          },
         ],
         example: `{
-  "space_seq": 1,
+  "spaceSeq": 1,
   "url": "https://www.youtube.com/watch?v=xxxxx",
-  "lang": "ko"
+  "lang": "ko",
+  "sttMode": false
 }`,
       },
       response: {
@@ -571,6 +593,13 @@ export const fileCategory: ApiCategory = {
             required: false,
             description: "Thumbnail file path.",
           },
+          {
+            name: "sttMode",
+            type: "boolean",
+            required: false,
+            description:
+              "Set to true when the file will be used for an STT project. On paid plans this raises the duration limit to 2 hours. Defaults to false.",
+          },
         ],
         example: `{
   "spaceSeq": 1,
@@ -581,7 +610,8 @@ export const fileCategory: ApiCategory = {
   "size": 52428800,
   "width": 1920,
   "height": 1080,
-  "thumbnailFilePath": null
+  "thumbnailFilePath": null,
+  "sttMode": false
 }`,
       },
       response: {
@@ -645,7 +675,7 @@ export const fileCategory: ApiCategory = {
       requestBody: {
         fields: [
           {
-            name: "space_seq",
+            name: "spaceSeq",
             type: "integer",
             required: true,
             description: "The unique identifier of the space.",
@@ -663,11 +693,19 @@ export const fileCategory: ApiCategory = {
             description: "Language code.",
             default: "en",
           },
+          {
+            name: "sttMode",
+            type: "boolean",
+            required: false,
+            description:
+              "Set to true when the file will be used for an STT project. On paid plans this raises the duration limit to 2 hours. Defaults to false.",
+          },
         ],
         example: `{
-  "space_seq": 1,
+  "spaceSeq": 1,
   "url": "https://www.youtube.com/watch?v=xxxxx",
-  "lang": "ko"
+  "lang": "ko",
+  "sttMode": false
 }`,
       },
       response: {
@@ -976,7 +1014,7 @@ export const dubbingCategory: ApiCategory = {
                   WREN: "Rich intonation.",
                   LINNET_3: "Keeps the original manner of speech.",
                   LINNET_4: "Balanced delivery that follows the context. Default when omitted.",
-                  FINCH: "Simplified basic dubbing (0.2 credits per second). Pro plan and above (403 VT40314 otherwise).",
+                  FINCH: "Simplified basic dubbing. Pro plan and above (403 VT40314 otherwise).",
                   NIGHTINGALE: "Multi-dimensional emotional expression. Pro plan and above, priced separately; no lip sync, SRT, RED speed, voice change or per-sentence regeneration (400 VT40918).",
                 },
                 description:
@@ -1042,7 +1080,7 @@ export const dubbingCategory: ApiCategory = {
               WREN: "Rich intonation.",
               LINNET_3: "Keeps the original manner of speech.",
               LINNET_4: "Balanced delivery that follows the context. Default when omitted.",
-              FINCH: "Simplified basic dubbing (0.2 credits per second). Pro plan and above (403 VT40314 otherwise).",
+              FINCH: "Simplified basic dubbing. Pro plan and above (403 VT40314 otherwise).",
               NIGHTINGALE: "Multi-dimensional emotional expression. Pro plan and above, priced separately; no lip sync, SRT, RED speed, voice change or per-sentence regeneration (400 VT40918).",
             },
           },
@@ -2351,7 +2389,7 @@ export const usageCategory: ApiCategory = {
         "Calculate the credits that will be consumed for a given media file based on its type, duration, translation type and TTS models. " +
         "Credits = whole seconds of media × rate per second × number of target languages.",
       notes: [
-        "Rate per second: dubbing (ORIOLE / WREN / LINNET_3 / LINNET_4) 1, FINCH 0.2, dubbing + lip sync 2, NIGHTINGALE 6, STT 0.2, audio separation 0.5.",
+        "The rate per second differs by TTS model and translation type; use this API to get the price.",
         "Video at 4K (3840×2160) or above costs 3× for dubbing (FINCH included) and lip sync. NIGHTINGALE, STT and audio separation are not affected by resolution.",
         "Send ttsModelCounts to price a mix of models per language (e.g. NIGHTINGALE:1,ORIOLE:2,FINCH:1); targetLanguageSize is then ignored.",
         "NIGHTINGALE proofread: the first proofread after the initial export is free; each later proofread costs the same as the initial dubbing. Send projectSeq to get the proofread price and exportCount.",
